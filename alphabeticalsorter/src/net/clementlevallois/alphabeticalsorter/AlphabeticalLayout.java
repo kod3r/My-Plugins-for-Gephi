@@ -38,9 +38,7 @@
 
  Portions Copyrighted 2011 Gephi Consortium.
  */
-
 package net.clementlevallois.alphabeticalsorter;
-
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,6 +48,7 @@ import java.util.TreeMap;
 import org.gephi.graph.api.Graph;
 import org.gephi.graph.api.GraphModel;
 import org.gephi.graph.api.Node;
+import org.gephi.graph.api.NodeData;
 import org.gephi.layout.plugin.AbstractLayout;
 import org.gephi.layout.spi.Layout;
 import org.gephi.layout.spi.LayoutBuilder;
@@ -62,12 +61,16 @@ public class AlphabeticalLayout extends AbstractLayout implements Layout {
     private boolean converged;
     private Map<String, Integer> mapSortedNodes;
     private double size;
+    private double x;
     private boolean inverseOrder;
+    private boolean isolatesOnly;
 
-    public AlphabeticalLayout(LayoutBuilder layoutBuilder, double size, boolean inverseOder) {
+    public AlphabeticalLayout(LayoutBuilder layoutBuilder, double size, boolean inverseOrder, boolean isolatesOnly, double x) {
         super(layoutBuilder);
         this.size = size;
         this.inverseOrder = inverseOrder;
+        this.isolatesOnly = isolatesOnly;
+        this.x = x;
     }
 
     @Override
@@ -87,14 +90,27 @@ public class AlphabeticalLayout extends AbstractLayout implements Layout {
         mapSortedNodes = new TreeMap();
         double y = 0;
         String label;
+        double minX = 0;
+        double currX;
+        NodeData nodeData;
         for (Node n : graph.getNodes()) {
-            label = n.getNodeData().getLabel();
+            nodeData = n.getNodeData();
+            label = nodeData.getLabel();
+            currX = nodeData.x();
+            if (currX < minX) {
+                minX = currX;
+            }
             if (label == null) {
                 continue;
             }
-            mapSortedNodes.put(n.getNodeData().getLabel(), n.getId());
+            if (isolatesOnly && graph.getDegree(n) != 0) {
+                continue;
+            }
+
+            mapSortedNodes.put(label, n.getId());
         }
         Node n;
+
         List<String> listNodes = new ArrayList(mapSortedNodes.keySet());
         Collections.sort(listNodes);
         if (!inverseOrder) {
@@ -102,7 +118,7 @@ public class AlphabeticalLayout extends AbstractLayout implements Layout {
         }
         for (String string : listNodes) {
             n = graph.getNode(mapSortedNodes.get(string));
-            n.getNodeData().setX((float) (00));
+            n.getNodeData().setX((float) (minX + x));
             n.getNodeData().setY((float) (y));
             y = y + size;
 
@@ -120,6 +136,7 @@ public class AlphabeticalLayout extends AbstractLayout implements Layout {
     public void endAlgo() {
     }
 
+    @Override
     public LayoutProperty[] getProperties() {
         List<LayoutProperty> properties = new ArrayList<LayoutProperty>();
         try {
@@ -137,6 +154,20 @@ public class AlphabeticalLayout extends AbstractLayout implements Layout {
                     "Alphabet.invertedOrder.name",
                     NbBundle.getMessage(getClass(), "Alphabet.invertedOrder.desc"),
                     "isInverseOrder", "setInverseOrder"));
+            properties.add(LayoutProperty.createProperty(
+                    this, Boolean.class,
+                    NbBundle.getMessage(getClass(), "Alphabet.isolatesOnly.name"),
+                    null,
+                    "Alphabet.isolatesOnly.name",
+                    NbBundle.getMessage(getClass(), "Alphabet.isolatesOnly.desc"),
+                    "isIsolatesOnly", "setIsolatesOnly"));
+            properties.add(LayoutProperty.createProperty(
+                    this, Double.class,
+                    NbBundle.getMessage(getClass(), "Alphabet.x.name"),
+                    null,
+                    "Alphabet.isolatesOnly.name",
+                    NbBundle.getMessage(getClass(), "Alphabet.x.desc"),
+                    "getX", "setX"));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -144,6 +175,7 @@ public class AlphabeticalLayout extends AbstractLayout implements Layout {
         return properties.toArray(new LayoutProperty[1]);
     }
 
+    @Override
     public void resetPropertiesValues() {
     }
 
@@ -162,4 +194,22 @@ public class AlphabeticalLayout extends AbstractLayout implements Layout {
     public void setInverseOrder(Boolean inverseOrder) {
         this.inverseOrder = inverseOrder;
     }
+
+    public Boolean isIsolatesOnly() {
+        return isolatesOnly;
+    }
+
+    public void setIsolatesOnly(Boolean isolatesOnly) {
+        this.isolatesOnly = isolatesOnly;
+    }
+
+    public Double getX() {
+        return x;
+    }
+
+    public void setX(Double x) {
+        this.x = x;
+    }
+    
+    
 }

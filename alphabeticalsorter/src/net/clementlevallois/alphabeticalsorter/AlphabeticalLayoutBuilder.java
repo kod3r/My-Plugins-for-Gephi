@@ -61,36 +61,44 @@ public class AlphabeticalLayoutBuilder implements LayoutBuilder {
 
     private MyLayoutUI ui = new MyLayoutUI();
 
+    @Override
     public String getName() {
         return NbBundle.getMessage(AlphabeticalLayoutBuilder.class, "Alphabet.name");
     }
 
+    @Override
     public Layout buildLayout() {
-        return new AlphabeticalLayout(this, 20, false);
+        return new AlphabeticalLayout(this, 20, false, true, -30);
     }
 
+    @Override
     public LayoutUI getUI() {
         return ui;
     }
 
     private static class MyLayoutUI implements LayoutUI {
 
+        @Override
         public String getDescription() {
             return NbBundle.getMessage(AlphabeticalLayoutBuilder.class, "Alphabet.description");
         }
 
+        @Override
         public Icon getIcon() {
             return null;
         }
 
+        @Override
         public JPanel getSimplePanel(Layout layout) {
             return null;
         }
 
+        @Override
         public int getQualityRank() {
             return -1;
         }
 
+        @Override
         public int getSpeedRank() {
             return -1;
         }
