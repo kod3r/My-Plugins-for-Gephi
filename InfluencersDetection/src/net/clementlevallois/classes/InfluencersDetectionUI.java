@@ -1,5 +1,6 @@
 package net.clementlevallois.classes;
 
+import Control.GeneralController;
 import javax.swing.JPanel;
 import org.gephi.statistics.spi.Statistics;
 import org.gephi.statistics.spi.StatisticsUI;
@@ -13,7 +14,7 @@ import org.openide.util.lookup.ServiceProvider;
 public class InfluencersDetectionUI implements StatisticsUI {
 
     private InfluencersDetectionMetricPanel panel;
-    private InfluencersDetectionMetric IDMetric;
+    private GeneralController IDMetric;
 
     @Override
     public JPanel getSettingsPanel() {
@@ -23,7 +24,7 @@ public class InfluencersDetectionUI implements StatisticsUI {
 
     @Override
     public void setup(Statistics statistics) {
-        this.IDMetric = (InfluencersDetectionMetric) statistics;
+        this.IDMetric = (GeneralController) statistics;
 
         //only when there is a panel to select the Erdos, which I commnented out
         //        if (panel != null) {
@@ -41,13 +42,13 @@ public class InfluencersDetectionUI implements StatisticsUI {
 
     @Override
     public Class<? extends Statistics> getStatisticsClass() {
-        return InfluencersDetectionMetric.class;
+        return GeneralController.class;
     }
 
     @Override
     public String getValue() {
         if (this.IDMetric != null) {
-            return "" + IDMetric.getAverage();
+            return "" + IDMetric.getReport();
         }
         return null;
     }

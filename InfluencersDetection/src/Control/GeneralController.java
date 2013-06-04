@@ -1,0 +1,215 @@
+package Control;
+
+import CommunityLabelFinder.Controller;
+import Layout.Layout;
+import Partition.ColorPartitions;
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import net.clementlevallois.classes.Community;
+import net.clementlevallois.classes.LabelCreation;
+import net.clementlevallois.classes.NodeMetricsComputer;
+import net.clementlevallois.classes.RoleAlgo;
+import net.clementlevallois.classes.TempMetrics;
+import org.gephi.data.attributes.api.AttributeColumn;
+import org.gephi.data.attributes.api.AttributeModel;
+import org.gephi.data.attributes.api.AttributeOrigin;
+import org.gephi.data.attributes.api.AttributeRow;
+import org.gephi.data.attributes.api.AttributeTable;
+import org.gephi.data.attributes.api.AttributeType;
+import org.gephi.graph.api.Graph;
+import org.gephi.graph.api.GraphModel;
+import org.gephi.graph.api.Node;
+import org.gephi.partition.api.Partition;
+import org.gephi.partition.api.PartitionController;
+import org.gephi.partition.plugin.NodeColorTransformer;
+import org.gephi.ranking.api.Ranking;
+import org.gephi.ranking.api.Transformer;
+import org.gephi.ranking.plugin.transformer.AbstractSizeTransformer;
+import org.gephi.statistics.plugin.Degree;
+import org.gephi.statistics.plugin.Modularity;
+import org.gephi.statistics.spi.Statistics;
+import org.gephi.utils.longtask.spi.LongTask;
+import org.gephi.utils.progress.Progress;
+import org.gephi.utils.progress.ProgressTicket;
+import org.gephi.visualization.VizController;
+import org.openide.util.Lookup;
+
+/**
+ *
+ * @author Clement Levallois
+ */
+public class GeneralController implements Statistics, LongTask {
+
+    private boolean cancel = false;
+    private ProgressTicket progressTicket;
+    private static String colFollowers;
+    private static int nbCommunities;
+    private Graph graph;
+    private static List<Community> communities = new ArrayList();
+    private static int minCommunitySize = 5;
+
+    @Override
+    public void execute(GraphModel graphModel, AttributeModel attributeModel) {
+        this.graph = graphModel.getGraphVisible();
+        graph.readLock();
+        Map<Integer, TempMetrics> tempMap = new HashMap();
+
+
+        AttributeTable nodeTable = attributeModel.getNodeTable();
+
+        //finds the name of the followers column
+        for (AttributeColumn col : nodeTable.getColumns()) {
+            if (col.getTitle().toLowerCase().contains("follower")) {
+                colFollowers = col.getTitle();
+            }
+        }
+
+        AttributeColumn roleColumn = nodeTable.getColumn("role");
+        if (roleColumn == null) {
+            roleColumn = nodeTable.addColumn("role", "Role", AttributeType.STRING, AttributeOrigin.COMPUTED, "");
+        }
+        try {
+            Progress.start(progressTicket, graph.getNodeCount());
+
+            //finds communities
+            Modularity mod = new Modularity();
+            mod.setResolution(0.95f);
+            mod.execute(graphModel, attributeModel);
+
+            //computes degree metrics
+            Degree degree = new Degree();
+            degree.execute(graphModel, attributeModel);
+
+            for (Node node : graph.getNodes()) {
+                TempMetrics tm = new TempMetrics();
+                tm.setRole("agent");
+                int nbFollowers;
+                try {
+                    nbFollowers = (Integer) node.getNodeData().getAttributes().getValue(colFollowers);
+                } catch (NullPointerException e) {
+                    nbFollowers = 0;
+                }
+                tm.setFollowers(nbFollowers);
+                tm.setCommunity((Integer) node.getAttributes().getValue(Modularity.MODULARITY_CLASS));
+                if (!graph.getGraphModel().isUndirected()) {
+                    tm.setInDegree((Integer) node.getAttributes().getValue(Degree.INDEGREE));
+                    tm.setOutDegree((Integer) node.getAttributes().getValue(Degree.OUTDEGREE));
+                }
+
+                tm.setDegree((Integer) node.getAttributes().getValue(Degree.DEGREE));
+                tempMap.put(node.getId(), tm);
+                if (cancel) {
+                    break;
+                }
+
+
+                //updates the list of communities;
+                Community community = new Community();
+                community.setId(tm.getCommunity());
+                int index = communities.indexOf(community);
+                if (index != -1) {
+                    community = communities.get(index);
+                    community.incrementSize();
+                    communities.set(index, community);
+                } else {
+                    community.incrementSize();
+                    communities.add(community);
+                }
+            }
+
+            nbCommunities = communities.size();
+
+            //colorizes communities with "I want hue" colors
+//            ColorPartitions.colorize(graph);
+
+
+
+            //detects roles
+            NodeMetricsComputer roleComputer = new NodeMetricsComputer(tempMap, graph);
+            tempMap = roleComputer.runMetrics();
+            RoleAlgo ra = new RoleAlgo(graph, tempMap);
+            tempMap = ra.detectRoles();
+
+
+            //writes roles to Data Laboratory
+            for (Integer id : tempMap.keySet()) {
+                ((AttributeRow) graph.getNode(id).getNodeData().getAttributes()).setValue(roleColumn, tempMap.get(id).getRole());
+                if (cancel) {
+                    break;
+                }
+            }
+
+            //detects labels for each community
+            Controller controller = new Controller(graph, attributeModel, tempMap);
+            controller.detectLabels();
+
+            //creates labels on the graph for roles and labels of community
+            LabelCreation lc = new LabelCreation(graph, attributeModel, tempMap);
+            lc.create();
+
+            VizController.getInstance().getTextManager().getModel().setShowNodeLabels(true);
+            VizController.getInstance().getVizModel().setBackgroundColor(Color.BLACK);
+
+            //layout to dispose the labels nicely
+            Layout layout = new Layout(graphModel);
+            layout.setZoom(true, "out", 2f);
+            layout.executeLayout();
+
+            Progress.progress(progressTicket);
+            graph.readUnlockAll();
+        } catch (Exception e) {
+            e.printStackTrace();
+            //Unlock graph
+            graph.readUnlockAll();
+        }
+//    catch (Exception e
+//
+//    
+//        ) {
+//            e.printStackTrace();
+//        //Unlock graph
+//        graph.readUnlockAll();
+//    }
+    }
+
+    @Override
+    public String getReport() {
+        String report = "<HTML> <BODY> <h1>Detection of Roles Report </h1> "
+                + "<hr>"
+                + "<br> <h2> Results: </h2>"
+                + "Average number: " + "value here" + "<br />"
+                + "Number of unconnected nodes: " + "<br />"
+                + "</BODY></HTML>";
+        return report;
+    }
+
+    @Override
+    public boolean cancel() {
+        cancel = true;
+        return true;
+    }
+
+    @Override
+    public void setProgressTicket(ProgressTicket progressTicket) {
+        this.progressTicket = progressTicket;
+    }
+
+    public static int getNbCommunities() {
+        return nbCommunities;
+    }
+
+    public static List<Community> getCommunities() {
+        return communities;
+    }
+
+    public static void setCommunities(List<Community> communities) {
+        GeneralController.communities = communities;
+    }
+
+    public static int getMinCommunitySize() {
+        return minCommunitySize;
+    }
+}

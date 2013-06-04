@@ -1,5 +1,6 @@
 package net.clementlevallois.classes;
 
+import Control.GeneralController;
 import org.gephi.statistics.spi.Statistics;
 import org.gephi.statistics.spi.StatisticsBuilder;
 import org.openide.util.lookup.ServiceProvider;
@@ -18,11 +19,11 @@ public class InfluencersDetectionMetricBuilder implements StatisticsBuilder {
 
     @Override
     public Statistics getStatistics() {
-        return new InfluencersDetectionMetric();
+        return new GeneralController();
     }
 
     @Override
     public Class<? extends Statistics> getStatisticsClass() {
-        return InfluencersDetectionMetric.class;
+        return GeneralController.class;
     }
 }

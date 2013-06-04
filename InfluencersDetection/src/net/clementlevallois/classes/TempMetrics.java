@@ -13,23 +13,18 @@ public class TempMetrics {
     private int inDegree;
     private int outDegree;
     private int degree;
+    private int followers;
     private int ratioInToOutDegree;
     private int community;
     private int degreeWithDifferentCommunities;
     private int inDegreeWithDifferentCommunities;
     private int outDegreeWithDifferentCommunities;
-    private boolean isHighestDegreeWithDifferentCommunities;
-    private boolean isHighestInDegreeWithDifferentCommunities;
-    private boolean isHighestOutDegreeWithDifferentCommunities;
     private String role;
     private int nbDiffCommunitiesOut;
     private int nbDiffCommunitiesIn;
     private int nbDiffCommunities;
 
     public TempMetrics() {
-        isHighestDegreeWithDifferentCommunities = false;
-        isHighestInDegreeWithDifferentCommunities = false;
-        isHighestOutDegreeWithDifferentCommunities = false;
     }
 
     public int getInDegree() {
@@ -96,30 +91,6 @@ public class TempMetrics {
         this.outDegreeWithDifferentCommunities = outDegreeWithDifferentCommunities;
     }
 
-    public boolean isIsHighestDegreeWithDifferentCommunities() {
-        return isHighestDegreeWithDifferentCommunities;
-    }
-
-    public void setIsHighestDegreeWithDifferentCommunities(boolean isHighestDegreeWithDifferentCommunities) {
-        this.isHighestDegreeWithDifferentCommunities = isHighestDegreeWithDifferentCommunities;
-    }
-
-    public boolean isIsHighestInDegreeWithDifferentCommunities() {
-        return isHighestInDegreeWithDifferentCommunities;
-    }
-
-    public void setIsHighestInDegreeWithDifferentCommunities(boolean isHighestInDegreeWithDifferentCommunities) {
-        this.isHighestInDegreeWithDifferentCommunities = isHighestInDegreeWithDifferentCommunities;
-    }
-
-    public boolean isIsHighestOutDegreeWithDifferentCommunities() {
-        return isHighestOutDegreeWithDifferentCommunities;
-    }
-
-    public void setIsHighestOutDegreeWithDifferentCommunities(boolean isHighestOutDegreeWithDifferentCommunities) {
-        this.isHighestOutDegreeWithDifferentCommunities = isHighestOutDegreeWithDifferentCommunities;
-    }
-
     public String getRole() {
         return role;
     }
@@ -151,4 +122,14 @@ public class TempMetrics {
     public void setNbDiffCommunities(int nbDiffCommunities) {
         this.nbDiffCommunities = nbDiffCommunities;
     }
+
+    public int getFollowers() {
+        return followers;
+    }
+
+    public void setFollowers(int followers) {
+        this.followers = followers;
+    }
+    
+    
 }
