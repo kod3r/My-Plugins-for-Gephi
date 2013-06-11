@@ -18,10 +18,7 @@ public class NGramDuplicatesCleaner {
 
     public static HashMultiset<String> removeDuplicates(Multiset<String> setNGrams) {
 
-        Clock deletingDuplicatesTime = new Clock("Deleting n-grams when they are already included in longer n-grams");
 
-        deletingDuplicatesTime.addText("Example: it will remove \"United States of \" because \"United States of America\" exists and is quite frequent too");
-        deletingDuplicatesTime.printText();
 
         HashMultiset multisetWords = HashMultiset.create();
 
@@ -35,7 +32,6 @@ public class NGramDuplicatesCleaner {
         int currWordCount;
         String currWord2;
         int currWordCount2;
-        Clock loopOne = new Clock("loop one");
         Set<String> setCurrentSubNGrams;
         Iterator<String> setCurrentSubNGramsIterator;
         String string;
@@ -78,10 +74,7 @@ public class NGramDuplicatesCleaner {
         }
 
 
-        System.out.println("number of terms to be removed: " + wordsToBeRemoved.size());
-        loopOne.closeAndPrintClock();
 
-        Clock loop2 = new Clock("loop2");
         itFreqList = setNGrams.entrySet().iterator();
         while (itFreqList.hasNext()) {
             boolean toRemain;
@@ -96,9 +89,6 @@ public class NGramDuplicatesCleaner {
 
 
         }
-        loop2.closeAndPrintClock();
-        deletingDuplicatesTime.addText("Number of words after removing redundant n-grams: " + multisetWords.elementSet().size());
-        deletingDuplicatesTime.closeAndPrintClock();
 
         return multisetWords;
 

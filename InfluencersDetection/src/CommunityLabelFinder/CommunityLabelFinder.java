@@ -109,7 +109,7 @@ public class CommunityLabelFinder {
 
     public String findMostFrequentsLabelsInACommunity(Set<String> stopwords) {
 
-        Multiset<String> terms = HashMultiset.create();
+        Multiset<String> terms;
         NGramFinder ngf = new NGramFinder(descriptionsInACommunity);
         terms = ngf.runIt(2, true);
         StopWordsRemover swr = new StopWordsRemover(stopwords);

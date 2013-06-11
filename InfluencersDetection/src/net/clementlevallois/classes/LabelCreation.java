@@ -10,17 +10,10 @@ import java.util.Map;
 import java.util.Set;
 import org.gephi.data.attributes.api.AttributeColumn;
 import org.gephi.data.attributes.api.AttributeModel;
-import org.gephi.filters.api.FilterController;
-import org.gephi.filters.api.Query;
-import org.gephi.filters.plugin.partition.PartitionBuilder.NodePartitionFilter;
 import org.gephi.graph.api.Edge;
 import org.gephi.graph.api.Graph;
 import org.gephi.graph.api.GraphModel;
-import org.gephi.graph.api.GraphView;
 import org.gephi.graph.api.Node;
-import org.gephi.partition.api.Part;
-import org.gephi.partition.api.Partition;
-import org.gephi.partition.api.PartitionController;
 import org.gephi.ranking.api.Ranking;
 import org.gephi.ranking.api.RankingController;
 import org.gephi.ranking.api.Transformer;
@@ -69,38 +62,51 @@ public class LabelCreation {
                 graph.getNode(id).getNodeData().getTextData().setSize(2);
 
                 //create the new node for the label;
-                Node node = gm.factory().newNode();
-                node.getNodeData().setLabel(tm.getRole());
-                node.getNodeData().setSize(20);
-                node.getNodeData().getTextData().setSize(2);
-                node.getNodeData().getAttributes().setValue("Modularity Class", -1);
-                Edge edge = gm.factory().newEdge(graph.getNode(id), node);
-                edge.setWeight(1.1f);
-                graph.addNode(node);
-                graph.addEdge(edge);
+//                Node node = gm.factory().newNode();
+//                node.getNodeData().setLabel(tm.getRole());
+//                node.getNodeData().setSize(20f);
+//                node.getNodeData().getTextData().setSize(2);
+//                node.getNodeData().getAttributes().setValue("Modularity Class", -1);
+//                Edge edge = gm.factory().newEdge(graph.getNode(id), node);
+//                edge.setWeight(1.1f);
+//                graph.addNode(node);
+//                graph.addEdge(edge);
             }
         }
+
+        //create a label for each community
         for (Community community : GeneralController.getCommunities()) {
+            if (community.getLabel() == null) {
+                continue;
+            }
             Node node = gm.factory().newNode();
             node.getNodeData().setLabel(community.getLabel());
-            System.out.println("label comm: " + community.getLabel());
             node.getNodeData().getAttributes().setValue("Modularity Class", -2);
+            node.getNodeData().setSize(25f);
+            node.getNodeData().getTextData().setSize(3);
+
             Edge edge = null;
             for (Node node2 : graph.getNodes().toArray()) {
-                if ((Integer) node2.getAttributes().getValue("Modularity Class") == community.getId()) {
+                if ((Integer) node2.getAttributes().getValue("Modularity Class") == community.getId() & node2.getAttributes().getValue("role").equals("local star")) {
                     node.getNodeData().setR(node2.getNodeData().r());
                     node.getNodeData().setG(node2.getNodeData().g());
                     node.getNodeData().setB(node2.getNodeData().b());
-                    node.getNodeData().getTextData().setSize(3);
-                    node.getNodeData().setSize(20);
                     edge = gm.factory().newEdge(graph.getNode(node2.getId()), node);
-                    edge.setWeight(1f);
+                    edge.setWeight(3f);
                     graph.addNode(node);
                     graph.addEdge(edge);
                     break;
                 }
             }
+
         }
+
+        //hide all labels temporarily
+        for (Node node : graph.getNodes().toArray()) {
+            node.getNodeData().getTextData().setVisible(false);
+        }
+
+
 
 //        GraphView mainView = graph.getView();
 

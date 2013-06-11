@@ -10,10 +10,22 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import org.gephi.data.attributes.api.AttributeController;
+import org.gephi.data.attributes.api.AttributeModel;
+import org.gephi.filters.api.FilterController;
+import org.gephi.filters.api.Query;
+import org.gephi.filters.plugin.partition.PartitionBuilder.NodePartitionFilter;
 import org.gephi.graph.api.Edge;
 import org.gephi.graph.api.Graph;
+import org.gephi.graph.api.GraphModel;
+import org.gephi.graph.api.GraphView;
 import org.gephi.graph.api.Node;
 import org.gephi.graph.api.NodeIterable;
+import org.gephi.partition.api.Part;
+import org.gephi.partition.api.Partition;
+import org.gephi.partition.api.PartitionController;
+import org.gephi.statistics.plugin.EigenvectorCentrality;
+import org.openide.util.Lookup;
 
 /**
  *
@@ -32,6 +44,7 @@ public class NodeMetricsComputer {
 
     public Map<Integer, TempMetrics> runMetrics() {
         degreeWithOtherCommunities();
+        eigenvectorInCommunities();
         return map;
     }
 
@@ -41,7 +54,7 @@ public class NodeMetricsComputer {
         Integer diffCommunity;
         Iterator<Entry<Integer, TempMetrics>> mapEntryIterator;
 
-        for (int i = 0; i <= GeneralController.getNbCommunities(); i++) {
+        for (int i = 0; i < GeneralController.getNbCommunities(); i++) {
             mapEntryIterator = map.entrySet().iterator();
             while (mapEntryIterator.hasNext()) {
                 Entry<Integer, TempMetrics> entry = mapEntryIterator.next();
@@ -123,6 +136,52 @@ public class NodeMetricsComputer {
                 entry.setValue(updatedTM);
 
             }
+        }
+    }
+
+    private void eigenvectorInCommunities() {
+
+        GraphModel graphModel = graph.getGraphModel();
+        AttributeController ac = Lookup.getDefault().lookup(AttributeController.class);
+        AttributeModel attributeModel = ac.getModel();
+
+        FilterController filterController = Lookup.getDefault().lookup(FilterController.class);
+        PartitionController pc = Lookup.getDefault().lookup(PartitionController.class);
+        Partition p = pc.buildPartition(attributeModel.getNodeTable().getColumn("Modularity Class"), graph);
+        Part part;
+        Query query;
+        GraphView view;
+        GraphView mainView = graphModel.getVisibleView();
+        NodePartitionFilter partitionFilter;
+
+        Graph currGraph;
+        for (int i = 0; i < GeneralController.getNbCommunities(); i++) {
+
+            partitionFilter = new NodePartitionFilter(p);
+            part = p.getPartFromValue(i);
+            partitionFilter.addPart(part);
+
+            System.out.println("community: " + i);
+            System.out.println("nb of nodes: " + GeneralController.getCommunities().get(i).getSize());
+            System.out.println("part: " + part.getPercentage());
+            System.out.println("partitionFilter: " + partitionFilter.getName());
+            query = filterController.createQuery(partitionFilter);
+            System.out.println("query: " + query.getName());
+            view = filterController.filter(query);
+            graphModel.setVisibleView(view); //Set the filter result as the visible view
+
+            currGraph = graphModel.getGraphVisible();
+            System.out.println("nb of nodes in community: " + currGraph.getNodeCount());
+
+            EigenvectorCentrality evc = new EigenvectorCentrality();
+            evc.setDirected(true);
+            evc.execute(graphModel, attributeModel);
+
+            for (Node node : currGraph.getNodes().toArray()) {
+                double eigenvectorValue = (Double) node.getAttributes().getValue("Eigenvector Centrality");
+                map.get(node.getId()).setLocalEigenvectorCentrality((float) eigenvectorValue);
+            }
+            graphModel.setVisibleView(mainView);
         }
     }
 }

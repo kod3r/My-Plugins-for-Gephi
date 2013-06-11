@@ -27,7 +27,7 @@ public class Layout {
         this.graphModel = graphModel;
     }
 
-    public void executeLayout() throws InterruptedException {
+    public void executeForceAtlas2Layout() throws InterruptedException {
         origCameraDistance = VizController.getInstance().getVizModel().getCameraDistance();
         ForceAtlas2 forceAtlas2 = new ForceAtlas2(null);
         forceAtlas2.setGraphModel(graphModel);
@@ -42,9 +42,9 @@ public class Layout {
             if (zoom) {
                 float j = i * zoomFactor;
                 if (inOrOut.equals("in")) {
-                    VizController.getInstance().getGraphIO().setCameraDistance(origCameraDistance - (float) j*1.5f);
+                    VizController.getInstance().getGraphIO().setCameraDistance(origCameraDistance - (float) j * 1.5f);
                 } else {
-                    VizController.getInstance().getGraphIO().setCameraDistance(origCameraDistance + (float) j*1.5f);
+                    VizController.getInstance().getGraphIO().setCameraDistance(origCameraDistance + (float) j * 1.5f);
                 }
             }
             Thread.currentThread().sleep(1);
@@ -52,6 +52,9 @@ public class Layout {
 
         forceAtlas2.endAlgo();
 
+    }
+
+    public void executeLabelAdjust() {
         LabelAdjust labelAdjust = new LabelAdjust(null);
         labelAdjust.setGraphModel(graphModel);
         labelAdjust.setAdjustBySize(true);
@@ -61,6 +64,7 @@ public class Layout {
             labelAdjust.goAlgo();
         }
         labelAdjust.endAlgo();
+
     }
 
     public void setZoom(Boolean zoom, String inOrOut, float zoomFactor) throws InterruptedException {

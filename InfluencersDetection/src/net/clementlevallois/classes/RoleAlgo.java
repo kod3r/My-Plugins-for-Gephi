@@ -30,12 +30,16 @@ public class RoleAlgo {
         rockStars();
         commmunityBridgers();
         specialists();
+        localConnector();
         return map;
     }
 
     private void rockStars() {
         Iterator<Map.Entry<Integer, TempMetrics>> mapIterator;
         mapIterator = map.entrySet().iterator();
+
+        int rockStartThreshold = Math.max(GeneralController.getMedianInDegree() * 50, 100000);
+
         while (mapIterator.hasNext()) {
             Map.Entry<Integer, TempMetrics> entry = mapIterator.next();
             if (belongsToSmallCommunity(entry.getKey())) {
@@ -45,7 +49,7 @@ public class RoleAlgo {
             if (!tm.getRole().equals("agent")) {
                 continue;
             }
-            if (tm.getFollowers() > 100000) {
+            if (tm.getFollowers() > rockStartThreshold) {
                 tm.setRole("rock star");
                 entry.setValue(tm);
             }
@@ -146,6 +150,49 @@ public class RoleAlgo {
                 tm = map.get(lowestDegreeNode.getId());
                 tm.setRole("specialist");
                 map.put(lowestDegreeNode.getId(), tm);
+            }
+        }
+    }
+
+    public void localConnector() {
+        Iterator<Map.Entry<Integer, TempMetrics>> mapEntryIterator;
+
+        for (int i = 0; i <= GeneralController.getNbCommunities(); i++) {
+            mapEntryIterator = map.entrySet().iterator();
+            Node highestLocalEVCNode = null;
+            Float highestlocalEigenvectorCentrality = 0f;
+            Float evc = 0f;
+            Float currCandidate;
+
+            while (mapEntryIterator.hasNext()) {
+                Map.Entry<Integer, TempMetrics> entry = mapEntryIterator.next();
+                if (belongsToSmallCommunity(entry.getKey())) {
+                    continue;
+                }
+
+                TempMetrics currValue = entry.getValue();
+                if (currValue.getCommunity() != i | !currValue.getRole().equals("agent")) {
+                    continue;
+                }
+                if (!graph.getGraphModel().isUndirected()) {
+//                    if (graph.getNode(entry.getKey()).getNodeData().getLabel().equals("IamMattHale")) {
+//                        System.out.println("IamMattHale");
+//                    }
+                    currCandidate = (float) currValue.getLocalEigenvectorCentrality();
+                    if ((currCandidate == highestlocalEigenvectorCentrality && currValue.getInDegree() > evc) | currCandidate > highestlocalEigenvectorCentrality) {
+                        highestlocalEigenvectorCentrality = currCandidate;
+                        highestLocalEVCNode = graph.getNode(entry.getKey());
+                        evc = (float) currValue.getLocalEigenvectorCentrality();
+                    }
+
+                }
+            }
+
+            TempMetrics tm;
+            if (highestLocalEVCNode != null) {
+                tm = map.get(highestLocalEVCNode.getId());
+                tm.setRole("local star");
+                map.put(highestLocalEVCNode.getId(), tm);
             }
         }
     }

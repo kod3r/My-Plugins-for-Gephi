@@ -23,6 +23,7 @@ public class TempMetrics {
     private int nbDiffCommunitiesOut;
     private int nbDiffCommunitiesIn;
     private int nbDiffCommunities;
+    private float localEigenvectorCentrality;
 
     public TempMetrics() {
     }
@@ -130,6 +131,16 @@ public class TempMetrics {
     public void setFollowers(int followers) {
         this.followers = followers;
     }
+
+    public float getLocalEigenvectorCentrality() {
+        return localEigenvectorCentrality;
+    }
+
+    public void setLocalEigenvectorCentrality(float localEigenvectorCentrality) {
+        this.localEigenvectorCentrality = localEigenvectorCentrality;
+    }
+    
+    
     
     
 }

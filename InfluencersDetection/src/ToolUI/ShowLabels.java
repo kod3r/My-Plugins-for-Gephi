@@ -41,12 +41,16 @@
  */
 package ToolUI;
 
+import Layout.Layout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.JToggleButton;
 import org.gephi.data.attributes.api.AttributeColumn;
 import org.gephi.data.attributes.api.AttributeController;
 import org.gephi.data.attributes.api.AttributeModel;
@@ -185,51 +189,124 @@ public class ShowLabels implements Tool {
     private static class ShowLabelsToolUI implements ToolUI {
 
         private boolean communityLabelsSelected = false;
-        private boolean roleLabelsSelected = false;
 
         @Override
         public JPanel getPropertiesBar(Tool tool) {
             JPanel labelsUI = new JPanel();
             final JCheckBox checkBoxCommunityLabels;
-            final JCheckBox checkBoxRoles;
-            //Add a checkbox in the property bar to run a layout algorithm
-            checkBoxRoles = new JCheckBox("Show roles");
-            checkBoxRoles.addActionListener(new ActionListener() {
+            final JCheckBox checkBoxRockStars;
+            final JCheckBox checkBoxSpecialists;
+            final JCheckBox checkBoxLocalConnectors;
+            final JCheckBox checkBoxCommunityBridgers;
+            final JButton labelAdjustButton;
+
+            labelAdjustButton = new JButton("fix label positions");
+            labelAdjustButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (checkBoxRoles.isSelected()) {
-                        roleLabelsSelected = true;
-                        if (communityLabelsSelected) {
+                    Layout layout = new Layout(graph.getGraphModel());
+                    layout.executeLabelAdjust();
+                }
+            });
+
+            //Add a checkbox in the property bar to run a layout algorithm
+            checkBoxRockStars = new JCheckBox("rock stars");
+            checkBoxRockStars.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (checkBoxRockStars.isSelected()) {
+                        if (!communityLabelsSelected) {
                             ColorMode[] cm = VizController.getInstance().getTextManager().getColorModes();
                             VizController.getInstance().getTextManager().getModel().setColorMode((ColorMode) cm[0]);
                         }
 
                         for (Node node : graph.getNodes().toArray()) {
-                            if ((Integer) node.getAttributes().getValue("Modularity Class") == -1) {
+                            if (node.getAttributes().getValue("role").equals("rock star")) {
                                 node.getNodeData().getTextData().setVisible(true);
-                                graph.getNeighbors(node).toArray()[0].getNodeData().getTextData().setVisible(true);
-
-                            } else if (communityLabelsSelected) {
-                                if ((Integer) node.getAttributes().getValue("Modularity Class") == -2) {
-                                    node.getNodeData().getTextData().setVisible(true);
-                                    graph.getNeighbors(node).toArray()[0].getNodeData().getTextData().setVisible(true);
-
-                                } else {
-                                    node.getNodeData().getTextData().setVisible(false);
-                                    graph.getNeighbors(node).toArray()[0].getNodeData().getTextData().setVisible(false);
-
-                                }
                             }
                         }
                     } else {
-                        roleLabelsSelected = false;
                         for (Node node : graph.getNodes().toArray()) {
-                            if (communityLabelsSelected & (Integer) node.getAttributes().getValue("Modularity Class") == -2) {
-                                node.getNodeData().getTextData().setVisible(true);
-                            } else {
+                            if (node.getAttributes().getValue("role").equals("rock star")) {
                                 node.getNodeData().getTextData().setVisible(false);
-                                graph.getNeighbors(node).toArray()[0].getNodeData().getTextData().setVisible(false);
+                            }
+                        }
+                    }
 
+                }
+            });
+
+            checkBoxSpecialists = new JCheckBox("specialists");
+            checkBoxSpecialists.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (checkBoxSpecialists.isSelected()) {
+                        if (!communityLabelsSelected) {
+                            ColorMode[] cm = VizController.getInstance().getTextManager().getColorModes();
+                            VizController.getInstance().getTextManager().getModel().setColorMode((ColorMode) cm[0]);
+                        }
+
+                        for (Node node : graph.getNodes().toArray()) {
+                            if (node.getAttributes().getValue("role").equals("specialist")) {
+                                node.getNodeData().getTextData().setVisible(true);
+                            }
+                        }
+                    } else {
+                        for (Node node : graph.getNodes().toArray()) {
+                            if (node.getAttributes().getValue("role").equals("specialist")) {
+                                node.getNodeData().getTextData().setVisible(false);
+                            }
+                        }
+                    }
+
+                }
+            });
+
+            checkBoxLocalConnectors = new JCheckBox("local stars");
+            checkBoxLocalConnectors.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (checkBoxLocalConnectors.isSelected()) {
+                        if (!communityLabelsSelected) {
+                            ColorMode[] cm = VizController.getInstance().getTextManager().getColorModes();
+                            VizController.getInstance().getTextManager().getModel().setColorMode((ColorMode) cm[0]);
+                        }
+
+                        for (Node node : graph.getNodes().toArray()) {
+                            if (node.getAttributes().getValue("role").equals("local star")) {
+                                node.getNodeData().getTextData().setVisible(true);
+                            }
+                        }
+                    } else {
+                        for (Node node : graph.getNodes().toArray()) {
+                            if (node.getAttributes().getValue("role").equals("local star")) {
+                                node.getNodeData().getTextData().setVisible(false);
+                            }
+                        }
+                    }
+
+                }
+            });
+
+            checkBoxCommunityBridgers = new JCheckBox("community bridgers");
+            checkBoxCommunityBridgers.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (checkBoxCommunityBridgers.isSelected()) {
+                        if (!communityLabelsSelected) {
+                            ColorMode[] cm = VizController.getInstance().getTextManager().getColorModes();
+                            VizController.getInstance().getTextManager().getModel().setColorMode((ColorMode) cm[0]);
+                        }
+
+                        for (Node node : graph.getNodes().toArray()) {
+                            if (node.getAttributes().getValue("role").equals("community bridger")) {
+                                node.getNodeData().getTextData().setVisible(true);
+                            }
+                        }
+                    } else {
+                        for (Node node : graph.getNodes().toArray()) {
+                            if (node.getAttributes().getValue("role").equals("community bridger")) {
+                                node.getNodeData().getTextData().setVisible(false);
                             }
                         }
                     }
@@ -238,7 +315,7 @@ public class ShowLabels implements Tool {
             });
 
 
-            checkBoxCommunityLabels = new JCheckBox("Show community labels");
+            checkBoxCommunityLabels = new JCheckBox("community labels");
             checkBoxCommunityLabels.addActionListener(
                     new ActionListener() {
                 @Override
@@ -247,43 +324,35 @@ public class ShowLabels implements Tool {
                         communityLabelsSelected = true;
 
                         ColorMode[] cm = VizController.getInstance().getTextManager().getColorModes();
-                        VizController.getInstance().getTextManager().getModel().setColorMode((ColorMode) cm[0]);
+                        VizController.getInstance().getTextManager().getModel().setColorMode((ColorMode) cm[1]);
 
                         for (Node node : graph.getNodes().toArray()) {
                             if ((Integer) node.getAttributes().getValue("Modularity Class") == -2) {
                                 node.getNodeData().getTextData().setVisible(true);
-                                graph.getNeighbors(node).toArray()[0].getNodeData().getTextData().setVisible(true);
-                            } else if (roleLabelsSelected) {
-                                if ((Integer) node.getAttributes().getValue("Modularity Class") == -1) {
-                                    node.getNodeData().getTextData().setVisible(true);
-                                    graph.getNeighbors(node).toArray()[0].getNodeData().getTextData().setVisible(true);
-
-                                } else {
-                                    node.getNodeData().getTextData().setVisible(false);
-                                    graph.getNeighbors(node).toArray()[0].getNodeData().getTextData().setVisible(false);
-
-                                }
                             }
+
                         }
                     } else {
                         communityLabelsSelected = false;
+                        ColorMode[] cm = VizController.getInstance().getTextManager().getColorModes();
+                        VizController.getInstance().getTextManager().getModel().setColorMode((ColorMode) cm[0]);
                         for (Node node : graph.getNodes().toArray()) {
-                            if (roleLabelsSelected & (Integer) node.getAttributes().getValue("Modularity Class") == -1) {
-                                node.getNodeData().getTextData().setVisible(true);
-                                graph.getNeighbors(node).toArray()[0].getNodeData().getTextData().setVisible(true);
-
-                            } else {
+                            if ((Integer) node.getAttributes().getValue("Modularity Class") == -2) {
                                 node.getNodeData().getTextData().setVisible(false);
-                                graph.getNeighbors(node).toArray()[0].getNodeData().getTextData().setVisible(false);
                             }
+
                         }
                     }
-
                 }
             });
-            labelsUI.add(checkBoxRoles);
-
+            labelsUI.add(checkBoxRockStars);
+            labelsUI.add(checkBoxCommunityBridgers);
             labelsUI.add(checkBoxCommunityLabels);
+            labelsUI.add(checkBoxLocalConnectors);
+            labelsUI.add(checkBoxSpecialists);
+            JSeparator js = new JSeparator();
+            labelsUI.add(js);
+            labelsUI.add(labelAdjustButton);
             return labelsUI;
         }
 

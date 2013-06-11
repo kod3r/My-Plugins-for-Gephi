@@ -9,6 +9,7 @@ import Utils.Colors;
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import net.clementlevallois.classes.Community;
 import org.gephi.graph.api.Graph;
 import org.gephi.graph.api.Node;
@@ -27,12 +28,18 @@ public class ColorPartitions {
         for (Community community : GeneralController.getCommunities()) {
             Color color = Color.decode(colors.getColors().get(index));
             mapCommunityToColors.put(community.getId(), color);
+            index++;
+
         }
-        
-        for (Node node: graph.getNodes().toArray()){
-            node.getNodeData().setR(mapCommunityToColors.get(graph.getNode(node.getId()).getAttributes().getValue("Modularity Class")).getRed());
-            node.getNodeData().setG(mapCommunityToColors.get(graph.getNode(node.getId()).getAttributes().getValue("Modularity Class")).getGreen());
-            node.getNodeData().setB(mapCommunityToColors.get(graph.getNode(node.getId()).getAttributes().getValue("Modularity Class")).getBlue());
+
+        for (Node node : graph.getNodes().toArray()) {
+            int modClass = (Integer) graph.getNode(node.getId()).getAttributes().getValue("Modularity Class");
+            Float r = mapCommunityToColors.get(modClass).getRed() / 255f;
+            Float g = mapCommunityToColors.get(modClass).getGreen() / 255f;
+            Float b = mapCommunityToColors.get(modClass).getBlue() / 255f;
+            node.getNodeData().setR(r);
+            node.getNodeData().setG(g);
+            node.getNodeData().setB(b);
         }
     }
 }

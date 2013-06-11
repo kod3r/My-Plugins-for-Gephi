@@ -1,10 +1,12 @@
 package Control;
 
 import CommunityLabelFinder.Controller;
+import Layout.LabelPositioner;
 import Layout.Layout;
 import Partition.ColorPartitions;
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,12 +24,6 @@ import org.gephi.data.attributes.api.AttributeType;
 import org.gephi.graph.api.Graph;
 import org.gephi.graph.api.GraphModel;
 import org.gephi.graph.api.Node;
-import org.gephi.partition.api.Partition;
-import org.gephi.partition.api.PartitionController;
-import org.gephi.partition.plugin.NodeColorTransformer;
-import org.gephi.ranking.api.Ranking;
-import org.gephi.ranking.api.Transformer;
-import org.gephi.ranking.plugin.transformer.AbstractSizeTransformer;
 import org.gephi.statistics.plugin.Degree;
 import org.gephi.statistics.plugin.Modularity;
 import org.gephi.statistics.spi.Statistics;
@@ -35,7 +31,6 @@ import org.gephi.utils.longtask.spi.LongTask;
 import org.gephi.utils.progress.Progress;
 import org.gephi.utils.progress.ProgressTicket;
 import org.gephi.visualization.VizController;
-import org.openide.util.Lookup;
 
 /**
  *
@@ -48,14 +43,16 @@ public class GeneralController implements Statistics, LongTask {
     private static String colFollowers;
     private static int nbCommunities;
     private Graph graph;
-    private static List<Community> communities = new ArrayList();
+    private static List<Community> communities;
     private static int minCommunitySize = 5;
+    private static int medianInDegree;
 
     @Override
     public void execute(GraphModel graphModel, AttributeModel attributeModel) {
         this.graph = graphModel.getGraphVisible();
         graph.readLock();
         Map<Integer, TempMetrics> tempMap = new HashMap();
+        communities = new ArrayList();
 
 
         AttributeTable nodeTable = attributeModel.getNodeTable();
@@ -67,10 +64,22 @@ public class GeneralController implements Statistics, LongTask {
             }
         }
 
+        //creates a "role" column
         AttributeColumn roleColumn = nodeTable.getColumn("role");
-        if (roleColumn == null) {
+        if (roleColumn != null) {
+            nodeTable.removeColumn(roleColumn);
+            roleColumn = nodeTable.addColumn("role", "Role", AttributeType.STRING, AttributeOrigin.COMPUTED, "");
+        } else {
             roleColumn = nodeTable.addColumn("role", "Role", AttributeType.STRING, AttributeOrigin.COMPUTED, "");
         }
+
+        //remove any existing modularity column
+        AttributeColumn modularityColumn = nodeTable.getColumn("Modularity Class");
+        if (modularityColumn != null) {
+            nodeTable.removeColumn(modularityColumn);
+        }
+
+
         try {
             Progress.start(progressTicket, graph.getNodeCount());
 
@@ -82,6 +91,9 @@ public class GeneralController implements Statistics, LongTask {
             //computes degree metrics
             Degree degree = new Degree();
             degree.execute(graphModel, attributeModel);
+
+            //data structure to compute median indegree;
+            List<Integer> sortedInDegrees = new ArrayList();
 
             for (Node node : graph.getNodes()) {
                 TempMetrics tm = new TempMetrics();
@@ -105,6 +117,9 @@ public class GeneralController implements Statistics, LongTask {
                     break;
                 }
 
+                //adds to the data structure to compute the median IndeGree;
+                sortedInDegrees.add(tm.getInDegree());
+
 
                 //updates the list of communities;
                 Community community = new Community();
@@ -122,9 +137,12 @@ public class GeneralController implements Statistics, LongTask {
 
             nbCommunities = communities.size();
 
-            //colorizes communities with "I want hue" colors
-//            ColorPartitions.colorize(graph);
+            //compute the median Indegree()
+            Collections.sort(sortedInDegrees);
+            medianInDegree = sortedInDegrees.get(Math.round((float) sortedInDegrees.size() / 2));
 
+            //colorizes communities with "I want hue" colors
+            ColorPartitions.colorize(graph);
 
 
             //detects roles
@@ -150,19 +168,25 @@ public class GeneralController implements Statistics, LongTask {
             LabelCreation lc = new LabelCreation(graph, attributeModel, tempMap);
             lc.create();
 
+
+            //shows labels on the graph, sets backgroundcolor to black
             VizController.getInstance().getTextManager().getModel().setShowNodeLabels(true);
             VizController.getInstance().getVizModel().setBackgroundColor(Color.BLACK);
 
             //layout to dispose the labels nicely
             Layout layout = new Layout(graphModel);
             layout.setZoom(true, "out", 2f);
-            layout.executeLayout();
+            layout.executeForceAtlas2Layout();
+//            LabelPositioner lp = new LabelPositioner(graph);
+//            lp.execute();
+            layout.executeLabelAdjust();
+
 
             Progress.progress(progressTicket);
             graph.readUnlockAll();
         } catch (Exception e) {
+            System.out.println("exception: " + e);
             e.printStackTrace();
-            //Unlock graph
             graph.readUnlockAll();
         }
 //    catch (Exception e
@@ -211,5 +235,9 @@ public class GeneralController implements Statistics, LongTask {
 
     public static int getMinCommunitySize() {
         return minCommunitySize;
+    }
+
+    public static int getMedianInDegree() {
+        return medianInDegree;
     }
 }

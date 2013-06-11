@@ -55,6 +55,10 @@ public class Controller {
             }
         }
 
+        if (colDescription == null) {
+            return;
+        }
+
         //finds the name of the language column
         for (AttributeColumn col : nodeTable.getColumns()) {
             if (col.getTitle().toLowerCase().contains("lang")) {
@@ -101,7 +105,7 @@ public class Controller {
                 continue;
             }
             CommunityLabelFinder clf2 = new CommunityLabelFinder(graph, community.getId());
-            String lang ="";
+            String lang = "";
             if (!colLang.equals("")) {
                 lang = clf2.determineLanguage();
             }
@@ -111,6 +115,7 @@ public class Controller {
                 clf2.collectDescriptionsInACommunity();
                 community.setLabel(clf2.findMostFrequentsLabelsInACommunity(stopwordsSet));
             }
+            System.out.println("community " + community.getId() + " has label " + community.getLabel());
             communities.add(community);
         }
         GeneralController.setCommunities(communities);
