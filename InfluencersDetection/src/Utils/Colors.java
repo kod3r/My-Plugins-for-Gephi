@@ -17,13 +17,13 @@ public class Colors {
 
     public Colors() {
 
-        listColors.add("#E78B27");
-        listColors.add("#6130D5");
-        listColors.add("#7FE5E5");
-        listColors.add("#59E341");
-        listColors.add("#2B2342");
-        listColors.add("#E03C86");
-        listColors.add("#3D5D21");
+        listColors.add("#FF00FF"); //pink
+        listColors.add("#00FF00"); //light green
+        listColors.add("#00FFFF"); //light blue
+        listColors.add("#FFFF00"); //yellow
+        listColors.add("#FF0000"); //red
+        listColors.add("#0000FF"); //dark blue
+        listColors.add("#C2D6E9");
         listColors.add("#A48BD9");
         listColors.add("#E7B39C");
         listColors.add("#71211B");

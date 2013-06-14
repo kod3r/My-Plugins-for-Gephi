@@ -26,71 +26,48 @@ public class NGramDuplicatesCleaner {
         Iterator<Multiset.Entry<String>> itFreqList;
         Set<String> wordsToBeRemoved = new HashSet();
         Multiset.Entry<String> entry;
-        Multiset.Entry<String> entry2;
-        Iterator<Multiset.Entry<String>> itFreqList2;
         String currWord;
-        int currWordCount;
-        String currWord2;
-        int currWordCount2;
         Set<String> setCurrentSubNGrams;
         Iterator<String> setCurrentSubNGramsIterator;
         String string;
         String[] termsInBigram;
         int maxNGrams = 2;
-        for (int i = maxNGrams - 1; i > 0; i--) {
-            System.out.println("looping through ngrams: " + (i + 1));
-            itFreqList = setNGrams.entrySet().iterator();
-            while (itFreqList.hasNext()) {
-                entry = itFreqList.next();
-                currWord = entry.getElement().trim();
-                if (currWord.split(" ").length == i - 1) {
-                    //special condition for i = 1 since this is a very simple case that does not need a heavy duty n-gram detection approach
-                    if (i == 1) {
-                        termsInBigram = currWord.split(" ");
-                        for (int j = 0; j <= 1; j++) {
-                            string = termsInBigram[j];
-                            if (!setNGrams.contains(string)) {
-                                continue;
-                            } else if (setNGrams.count(string) < entry.getCount() * 2) {
-                                wordsToBeRemoved.add(string);
-                            }
-                        }
-
-                    } else {
-                        setCurrentSubNGrams = NGramFinder.ngramsInString(i, currWord);
-                        setCurrentSubNGramsIterator = setCurrentSubNGrams.iterator();
-                        while (setCurrentSubNGramsIterator.hasNext()) {
-                            string = setCurrentSubNGramsIterator.next().trim();
-                            if (!setNGrams.contains(string)) {
-
-                                continue;
-                            } else if (setNGrams.count(string) < entry.getCount() * 2) {
-                                wordsToBeRemoved.add(string);
-                            }
-                        }
-                    }
+        itFreqList = setNGrams.entrySet().iterator();
+        while (itFreqList.hasNext()) {
+            entry = itFreqList.next();
+            currWord = entry.getElement().trim();
+            if (!currWord.contains(" ")) {
+                continue;
+            }
+            setCurrentSubNGrams = new HashSet();
+            for (int i = maxNGrams-1; i > 0; i--) {
+                setCurrentSubNGrams.addAll(NGramFinder.ngramsInString(i, currWord));
+            }
+            setCurrentSubNGramsIterator = setCurrentSubNGrams.iterator();
+            while (setCurrentSubNGramsIterator.hasNext()) {
+                string = setCurrentSubNGramsIterator.next().trim();
+                if (!setNGrams.contains(string)) {
+                    continue;
+                } else if (setNGrams.count(string) < entry.getCount() * 2) {
+                    wordsToBeRemoved.add(string);
                 }
             }
         }
 
-
-
         itFreqList = setNGrams.entrySet().iterator();
+
         while (itFreqList.hasNext()) {
             boolean toRemain;
             entry = itFreqList.next();
             currWord = entry.getElement();
             toRemain = wordsToBeRemoved.add(currWord);
 
-            //This line includes the condition for an important word to remain in the list of words, even if listed with stopwords.
             if (toRemain) {
                 multisetWords.add(entry.getElement(), entry.getCount());
             }
 
 
         }
-
         return multisetWords;
-
     }
 }

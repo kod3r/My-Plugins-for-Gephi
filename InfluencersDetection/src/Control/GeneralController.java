@@ -1,6 +1,6 @@
 package Control;
 
-import CommunityLabelFinder.Controller;
+import CommunityLabelFinder.ControllerLabelsFinder;
 import Layout.LabelPositioner;
 import Layout.Layout;
 import Partition.ColorPartitions;
@@ -44,7 +44,7 @@ public class GeneralController implements Statistics, LongTask {
     private static int nbCommunities;
     private Graph graph;
     private static List<Community> communities;
-    private static int minCommunitySize = 5;
+    private static int minCommunitySize = 10;
     private static int medianInDegree;
 
     @Override
@@ -83,10 +83,27 @@ public class GeneralController implements Statistics, LongTask {
         try {
             Progress.start(progressTicket, graph.getNodeCount());
 
-            //finds communities
-            Modularity mod = new Modularity();
-            mod.setResolution(0.95f);
-            mod.execute(graphModel, attributeModel);
+            double initModularity = 0;
+            double newModularity = 0;
+            boolean continueLoop = true;
+            float resolution = 0.7f;
+            //finds communities, until a minimum differentiation between communities is achieved
+            while (continueLoop) {
+                Modularity mod = new Modularity();
+                mod.setResolution(resolution);
+                mod.execute(graphModel, attributeModel);
+                newModularity = mod.getModularity();
+                if (newModularity > initModularity) {
+                    continueLoop = true;
+                    resolution = resolution + 0.03f;
+                    initModularity = newModularity;
+                } else {
+                    System.out.println("final resolution: " + resolution);
+                    System.out.println("modularity achieved: " + newModularity);
+                    continueLoop = false;
+                }
+            }
+
 
             //computes degree metrics
             Degree degree = new Degree();
@@ -98,11 +115,16 @@ public class GeneralController implements Statistics, LongTask {
             for (Node node : graph.getNodes()) {
                 TempMetrics tm = new TempMetrics();
                 tm.setRole("agent");
-                int nbFollowers;
+                int nbFollowers = 0;
                 try {
                     nbFollowers = (Integer) node.getNodeData().getAttributes().getValue(colFollowers);
                 } catch (NullPointerException e) {
                     nbFollowers = 0;
+                } catch (ClassCastException c) {
+                    if (node.getNodeData().getAttributes().getValue(colFollowers) instanceof Double) {
+                        double nbFollowersDouble = (Double) node.getNodeData().getAttributes().getValue(colFollowers);
+                        nbFollowers = (int) nbFollowersDouble;
+                    }
                 }
                 tm.setFollowers(nbFollowers);
                 tm.setCommunity((Integer) node.getAttributes().getValue(Modularity.MODULARITY_CLASS));
@@ -161,8 +183,8 @@ public class GeneralController implements Statistics, LongTask {
             }
 
             //detects labels for each community
-            Controller controller = new Controller(graph, attributeModel, tempMap);
-            controller.detectLabels();
+            ControllerLabelsFinder clf = new ControllerLabelsFinder(graph, attributeModel, tempMap);
+            clf.detectLabels();
 
             //creates labels on the graph for roles and labels of community
             LabelCreation lc = new LabelCreation(graph, attributeModel, tempMap);

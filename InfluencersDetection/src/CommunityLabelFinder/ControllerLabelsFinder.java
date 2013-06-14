@@ -5,6 +5,9 @@
 package CommunityLabelFinder;
 
 import Control.GeneralController;
+import LanguageDetection.Cyzoku.DetectorFactory;
+import LanguageDetection.Cyzoku.LangDetectException;
+import LanguageDetection.LanguageDetector;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import java.io.BufferedReader;
@@ -29,7 +32,7 @@ import org.gephi.graph.api.Node;
  *
  * @author C. Levallois
  */
-public class Controller {
+public class ControllerLabelsFinder {
 
     private static String colDescription;
     private static String colLang = "";
@@ -39,13 +42,13 @@ public class Controller {
     private String mainLang;
     private Map<Integer, TempMetrics> map;
 
-    public Controller(Graph graph, AttributeModel attributeModel, Map<Integer, TempMetrics> map) {
+    public ControllerLabelsFinder(Graph graph, AttributeModel attributeModel, Map<Integer, TempMetrics> map) {
         this.graph = graph;
         this.map = map;
         this.attributeModel = attributeModel;
     }
 
-    public void detectLabels() throws IOException {
+    public void detectLabels() throws IOException, LangDetectException {
         AttributeTable nodeTable = attributeModel.getNodeTable();
 
         //finds the name of the description column
@@ -67,7 +70,7 @@ public class Controller {
         }
 
         //builds a a stopwords list
-        InputStream stopwordsStream = Controller.class.getResourceAsStream("stopwords_10000_most_frequent_filtered.txt");
+        InputStream stopwordsStream = ControllerLabelsFinder.class.getResourceAsStream("stopwords_10000_most_frequent_filtered.txt");
         BufferedReader br = new BufferedReader(new InputStreamReader(stopwordsStream));
         String[] stopwordsArray = br.readLine().split(",");
         stopwordsArray = Arrays.copyOf(stopwordsArray, 5000);
@@ -76,27 +79,34 @@ public class Controller {
         stopwordsSet.addAll(Arrays.asList(stopwordsArray));
 
         //finds the main language of the tweets;
-        if (!colLang.equals("")) {
-            String mostFrequentLang = "";
-            int highestCount = 0;
-            Multiset<String> langs = HashMultiset.create();
-            for (Node node : graph.getNodes()) {
-                langs.add((String) node.getNodeData().getAttributes().getValue(colLang));
-            }
-            for (String lang : langs.elementSet()) {
-                if (langs.count(lang) >= highestCount) {
-                    highestCount = langs.count(lang);
-                    mostFrequentLang = lang;
-                }
-            }
-            mainLang = mostFrequentLang;
-            System.out.println("main lang is: " + mainLang);
+        String mostFrequentLang = "";
+        int highestCount = 0;
+        Multiset<String> langs = HashMultiset.create();
+        DetectorFactory.loadProfileChooseSource("", true);
+        LanguageDetector ld;
+        for (Node node : graph.getNodes()) {
+            ld = new LanguageDetector();
+            String nodeDescription = (String) node.getNodeData().getAttributes().getValue(colDescription);
+            String nodeLang = ld.detect(nodeDescription);
+//            if (nodeLang != null && !nodeLang.equals("en")) {
+//                System.out.println("node descript: " + nodeDescription);
+//                System.out.println("lang: " + nodeLang);
+//            }
+            langs.add(nodeLang);
         }
+        for (String lang : langs.elementSet()) {
+            if (langs.count(lang) >= highestCount) {
+                highestCount = langs.count(lang);
+                mostFrequentLang = lang;
+            }
+        }
+        mainLang = mostFrequentLang;
+        System.out.println("main lang is: " + mainLang);
 
         //launches the detection
 
         List<Community> communities = new ArrayList();
-        CommunityLabelFinder clf = new CommunityLabelFinder(graph, 1);
+        CommunityLabelFinder clf = new CommunityLabelFinder(graph, 1, mainLang);
         clf.collectDescriptions();
         clf.findMostFrequentsLabelsInTotal(stopwordsSet);
 
@@ -104,12 +114,11 @@ public class Controller {
             if (community.getSize() < GeneralController.getMinCommunitySize()) {
                 continue;
             }
-            CommunityLabelFinder clf2 = new CommunityLabelFinder(graph, community.getId());
+            CommunityLabelFinder clf2 = new CommunityLabelFinder(graph, community.getId(), mainLang);
             String lang = "";
-            if (!colLang.equals("")) {
-                lang = clf2.determineLanguage();
-            }
-            if (!lang.equals(mainLang) & !lang.equals("")) {
+            lang = clf2.determineLanguageFromDescription(mainLang);
+            if (mainLang != null && !lang.equals(mainLang) & !lang.equals("")) {
+                System.out.println("language about to be attributed: " + lang);
                 community.setLabel("We speak " + CountryCodes.get(lang));
             } else {
                 clf2.collectDescriptionsInACommunity();

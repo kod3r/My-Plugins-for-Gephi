@@ -30,7 +30,7 @@ public class RoleAlgo {
         rockStars();
         commmunityBridgers();
         specialists();
-        localConnector();
+        localStar();
         return map;
     }
 
@@ -154,7 +154,7 @@ public class RoleAlgo {
         }
     }
 
-    public void localConnector() {
+    public void localStar() {
         Iterator<Map.Entry<Integer, TempMetrics>> mapEntryIterator;
 
         for (int i = 0; i <= GeneralController.getNbCommunities(); i++) {
@@ -175,14 +175,18 @@ public class RoleAlgo {
                     continue;
                 }
                 if (!graph.getGraphModel().isUndirected()) {
-//                    if (graph.getNode(entry.getKey()).getNodeData().getLabel().equals("IamMattHale")) {
-//                        System.out.println("IamMattHale");
-//                    }
                     currCandidate = (float) currValue.getLocalEigenvectorCentrality();
                     if ((currCandidate == highestlocalEigenvectorCentrality && currValue.getInDegree() > evc) | currCandidate > highestlocalEigenvectorCentrality) {
                         highestlocalEigenvectorCentrality = currCandidate;
                         highestLocalEVCNode = graph.getNode(entry.getKey());
                         evc = (float) currValue.getLocalEigenvectorCentrality();
+                    }
+                } else {
+                    currCandidate = (float) currValue.getDegree();
+                    if (currCandidate > highestlocalEigenvectorCentrality) {
+                        highestlocalEigenvectorCentrality = currCandidate;
+                        highestLocalEVCNode = graph.getNode(entry.getKey());
+                        evc = (float) currValue.getDegree();
                     }
 
                 }

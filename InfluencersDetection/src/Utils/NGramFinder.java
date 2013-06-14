@@ -110,14 +110,11 @@ public class NGramFinder {
         StringBuilder sb;
         for (int i = 0; i < words.length - n + 1; i++) {
             sb = new StringBuilder();
-            for (int j = i; j < j + n; j++) {
+            for (int j = i; j < i + n; j++) {
                 sb.append(j > i ? " " : "").append(words[j]);
             }
             ngram = sb.toString();
-
-            if (ngram.length() > 1) {
-                setToReturn.add(ngram);
-            }
+            setToReturn.add(ngram);
         }
 
         return setToReturn;

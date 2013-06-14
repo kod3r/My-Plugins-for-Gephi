@@ -31,7 +31,7 @@ public class StatusCleaner {
         }
         string = string.replace("'s", " ");
         string = string.replace("’s", " ");
-        String punctuation = "!?.@'’\":-+,|$&()#=*";
+        String punctuation = "!?.@'’`+<>\":-+,|$;_/~&()#=*";
         char[] chars = punctuation.toCharArray();
         for (char currChar : chars) {
             string = string.replace(String.valueOf(currChar), " ");

@@ -1,8 +1,6 @@
 package Layout;
 
-import java.util.concurrent.TimeUnit;
 import org.gephi.graph.api.GraphModel;
-import org.gephi.layout.plugin.AutoLayout;
 import org.gephi.layout.plugin.forceAtlas2.ForceAtlas2;
 import org.gephi.layout.plugin.labelAdjust.LabelAdjust;
 import org.gephi.visualization.VizController;
@@ -37,6 +35,7 @@ public class Layout {
         forceAtlas2.setThreadsCount(Runtime.getRuntime().availableProcessors() * 2);
 
         forceAtlas2.initAlgo();
+        Long beginning = System.currentTimeMillis();
         for (int i = 0; i < 2000 && forceAtlas2.canAlgo(); i++) {
             forceAtlas2.goAlgo();
             if (zoom) {
@@ -47,7 +46,12 @@ public class Layout {
                     VizController.getInstance().getGraphIO().setCameraDistance(origCameraDistance + (float) j * 1.5f);
                 }
             }
-            Thread.currentThread().sleep(1);
+            
+            //stops the algo after n seconds
+            int seconds = 7;
+            if ((System.currentTimeMillis() - beginning) / 1000 > seconds) {
+                break;
+            }
         }
 
         forceAtlas2.endAlgo();

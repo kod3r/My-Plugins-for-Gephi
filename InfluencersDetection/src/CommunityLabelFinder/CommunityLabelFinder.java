@@ -1,10 +1,14 @@
 package CommunityLabelFinder;
 
+import LanguageDetection.Cyzoku.DetectorFactory;
+import LanguageDetection.Cyzoku.LangDetectException;
+import LanguageDetection.LanguageDetector;
 import Utils.NGramDuplicatesCleaner;
 import Utils.NGramFinder;
 import Utils.StatusCleaner;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -23,14 +27,15 @@ public class CommunityLabelFinder {
 
     private Graph graph;
     private int communityIndex;
-    private String communityLang;
     private List<String> descriptions;
     private List<String> descriptionsInACommunity;
     private static Multiset<String> termsInTotal;
+    private String mainLang;
 
-    public CommunityLabelFinder(Graph graph, int communityIndex) {
+    public CommunityLabelFinder(Graph graph, int communityIndex, String mainLang) {
         this.graph = graph;
         this.communityIndex = communityIndex;
+        this.mainLang = mainLang;
     }
 
     public Graph getGraph() {
@@ -52,17 +57,24 @@ public class CommunityLabelFinder {
     public void collectDescriptions() {
         descriptions = new ArrayList();
         for (Node node : graph.getNodes()) {
-            descriptions.add((String) node.getNodeData().getAttributes().getValue(Controller.getColDescription()));
+            descriptions.add((String) node.getNodeData().getAttributes().getValue(ControllerLabelsFinder.getColDescription()));
         }
         descriptions = cleanDescriptions(descriptions);
 
     }
 
-    public void collectDescriptionsInACommunity() {
+    public void collectDescriptionsInACommunity() throws LangDetectException, IOException {
         descriptionsInACommunity = new ArrayList();
+        DetectorFactory.loadProfileChooseSource("", true);
+        LanguageDetector ld;
         for (Node node : graph.getNodes()) {
             if ((Integer) node.getNodeData().getAttributes().getValue("Modularity Class") == communityIndex) {
-                descriptionsInACommunity.add((String) node.getNodeData().getAttributes().getValue(Controller.getColDescription()));
+                String nodeDescription = (String) node.getNodeData().getAttributes().getValue(ControllerLabelsFinder.getColDescription());
+                String lang = new LanguageDetector().detect(nodeDescription);
+                if (lang == null || !lang.equals(mainLang)) {
+                    continue;
+                }
+                descriptionsInACommunity.add(nodeDescription);
             }
         }
         descriptionsInACommunity = cleanDescriptions(descriptionsInACommunity);
@@ -85,7 +97,7 @@ public class CommunityLabelFinder {
         String mostFrequentLang = "";
         for (Node node : graph.getNodes()) {
             if ((Integer) node.getNodeData().getAttributes().getValue("Modularity Class") == communityIndex) {
-                String currLang = (String) node.getNodeData().getAttributes().getValue(Controller.getColLang());
+                String currLang = (String) node.getNodeData().getAttributes().getValue(ControllerLabelsFinder.getColLang());
                 communityLangs.add(currLang);
             }
         }
@@ -96,6 +108,39 @@ public class CommunityLabelFinder {
             }
         }
         return mostFrequentLang;
+    }
+
+    public String determineLanguageFromDescription(String mainLang) throws LangDetectException, IOException {
+        Multiset<String> communityLangs = HashMultiset.create();
+        int highestCount = 0;
+        String mostFrequentLang = "";
+        DetectorFactory.loadProfileChooseSource("", true);
+        LanguageDetector ld;
+        for (Node node : graph.getNodes()) {
+            if ((Integer) node.getNodeData().getAttributes().getValue("Modularity Class") == communityIndex) {
+                ld = new LanguageDetector();
+                String currDescription = (String) node.getNodeData().getAttributes().getValue(ControllerLabelsFinder.getColDescription());
+                String currLang = ld.detect(currDescription);
+                if (currLang != null) {
+                    communityLangs.add(currLang);
+                }
+
+                System.out.println("currDescription: " + currDescription);
+                System.out.println("currLang: " + currLang);
+
+            }
+        }
+        for (String lang : communityLangs.elementSet()) {
+            if (communityLangs.count(lang) >= highestCount) {
+                highestCount = communityLangs.count(lang);
+                mostFrequentLang = lang;
+            }
+        }
+        if (highestCount * 3 > communityLangs.size()) {
+            return mostFrequentLang;
+        } else {
+            return mainLang;
+        }
     }
 
     public void findMostFrequentsLabelsInTotal(Set<String> stopwords) {
@@ -119,6 +164,12 @@ public class CommunityLabelFinder {
         String mostFrequentTerm = "";
         for (String string : terms.elementSet()) {
             double freq = ((double) terms.count(string) * 2 * (1 / Math.max(1, termsInTotal.count(string) - terms.count(string))));
+            
+            //social media should also count as "#socialmedia"
+            if (string.contains(" ")) {
+                String hashtagEquiv = string.replace(" ", "");
+                freq = freq + ((double) terms.count(hashtagEquiv) * 2 * (1 / Math.max(1, termsInTotal.count(hashtagEquiv) - terms.count(hashtagEquiv))));
+            }
             if (freq > highestFrequency) {
                 highestFrequency = freq;
                 mostFrequentTerm = string;
