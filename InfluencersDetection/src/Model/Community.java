@@ -2,17 +2,20 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.clementlevallois.classes;
+package Model;
+
+import java.util.Comparator;
 
 /**
  *
  * @author C. Levallois
  */
-public class Community {
+public class Community implements Comparable<Community> {
 
     private Integer size;
     private String label;
     private Integer id;
+    private String localStar;
 
     public Community() {
     }
@@ -49,6 +52,16 @@ public class Community {
         }
     }
 
+    public String getLocalStar() {
+        return localStar;
+    }
+
+    public void setLocalStar(String localStar) {
+        this.localStar = localStar;
+    }
+    
+    
+
     @Override
     public int hashCode() {
         int hash = 7;
@@ -70,6 +83,13 @@ public class Community {
         }
         return true;
     }
-    
-    
+
+    @Override
+    public int compareTo(Community o) {
+        if (this.size > o.size) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
 }

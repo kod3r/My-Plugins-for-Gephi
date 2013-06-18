@@ -1,19 +1,8 @@
-package net.clementlevallois.classes;
+package DefaultPluginClasses;
 
 import java.awt.BorderLayout;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.ListSelectionModel;
-import org.gephi.graph.api.Graph;
-import org.gephi.graph.api.GraphController;
-import org.gephi.graph.api.GraphModel;
-import org.gephi.graph.api.Node;
 import org.jdesktop.swingx.JXHeader;
-import org.openide.util.Lookup;
 
 /**
  *

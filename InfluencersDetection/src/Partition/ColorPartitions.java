@@ -10,7 +10,7 @@ import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import net.clementlevallois.classes.Community;
+import Model.Community;
 import org.gephi.graph.api.Graph;
 import org.gephi.graph.api.Node;
 
@@ -26,6 +26,9 @@ public class ColorPartitions {
         Colors colors = new Colors();
 
         for (Community community : GeneralController.getCommunities()) {
+            if (index >= colors.getColors().size())  {
+                index = 0;
+            }
             Color color = Color.decode(colors.getColors().get(index));
             mapCommunityToColors.put(community.getId(), color);
             index++;

@@ -44,6 +44,11 @@ public final class StopWordsRemover {
                 }
             }
 
+            if (string.length() <= 3 & string.contains(" ")) {
+                write = false;
+            }
+
+
             if (write) {
                 multisetToReturn.add(entryWord, terms.count(entryWord));
             }

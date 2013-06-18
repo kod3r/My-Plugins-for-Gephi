@@ -2,8 +2,9 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.clementlevallois.classes;
+package Metrics;
 
+import Model.TempMetrics;
 import Control.GeneralController;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -45,6 +46,7 @@ public class NodeMetricsComputer {
     public Map<Integer, TempMetrics> runMetrics() {
         degreeWithOtherCommunities();
         eigenvectorInCommunities();
+        eigenvectorCentrality();
         return map;
     }
 
@@ -182,6 +184,22 @@ public class NodeMetricsComputer {
                 map.get(node.getId()).setLocalEigenvectorCentrality((float) eigenvectorValue);
             }
             graphModel.setVisibleView(mainView);
+        }
+    }
+
+    private void eigenvectorCentrality() {
+
+        GraphModel graphModel = graph.getGraphModel();
+        AttributeController ac = Lookup.getDefault().lookup(AttributeController.class);
+        AttributeModel attributeModel = ac.getModel();
+
+        EigenvectorCentrality evc = new EigenvectorCentrality();
+        evc.setDirected(true);
+        evc.execute(graphModel, attributeModel);
+
+        for (Node node : graph.getNodes().toArray()) {
+            double eigenvectorValue = (Double) node.getAttributes().getValue("Eigenvector Centrality");
+            map.get(node.getId()).setEigenvectorCentrality((float) eigenvectorValue);
         }
     }
 }

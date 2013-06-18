@@ -14,7 +14,6 @@ import java.util.HashSet;
 import LanguageDetection.Cyzoku.util.LangProfile;
 
 import net.arnx.jsonic.JSON;
-import net.arnx.jsonic.JSONException;
 
 /**
  *
@@ -35,10 +34,10 @@ public class Command {
     /**
      * for Command line easy parser
      */
-    private HashMap<String, String> opt_with_value = new HashMap<>();
-    private HashMap<String, String> values = new HashMap<>();
-    private HashSet<String> opt_without_value = new HashSet<>();
-    private ArrayList<String> arglist = new ArrayList<>();
+    private HashMap<String, String> opt_with_value = new HashMap();
+    private HashMap<String, String> values = new HashMap();
+    private HashSet<String> opt_without_value = new HashSet();
+    private ArrayList<String> arglist = new ArrayList();
 
     /**
      * Command line easy parser
@@ -153,7 +152,7 @@ public class Command {
                 File profile_path = new File(get("directory") + "/profiles/" + lang);
                 os = new FileOutputStream(profile_path);
                 JSON.encode(profile, os);
-            } catch (JSONException | IOException e) {
+            } catch (Exception e) {
             } finally {
                 try {
                     if (os != null) {
@@ -198,7 +197,7 @@ public class Command {
             File profile_path = new File(lang);
             os = new FileOutputStream(profile_path);
             JSON.encode(profile, os);
-        } catch (JSONException | IOException e) {
+        } catch (Exception e) {
         } finally {
             try {
                 if (os != null) {
@@ -262,7 +261,7 @@ public class Command {
         if (loadProfile()) {
             return;
         }
-        HashMap<String, ArrayList<String>> result = new HashMap<>();
+        HashMap<String, ArrayList<String>> result = new HashMap();
         for (String filename : arglist) {
             BufferedReader is = null;
             try {
@@ -293,7 +292,7 @@ public class Command {
                     }
                 }
 
-            } catch (IOException | LangDetectException e) {
+            } catch (Exception e) {
             } finally {
                 try {
                     if (is != null) {
@@ -303,12 +302,12 @@ public class Command {
                 }
             }
 
-            ArrayList<String> langlist = new ArrayList<>(result.keySet());
+            ArrayList<String> langlist = new ArrayList(result.keySet());
             Collections.sort(langlist);
 
             int totalCount = 0, totalCorrect = 0;
             for (String lang : langlist) {
-                HashMap<String, Integer> resultCount = new HashMap<>();
+                HashMap<String, Integer> resultCount = new HashMap();
                 int count = 0;
                 ArrayList<String> list = result.get(lang);
                 for (String detectedLang : list) {

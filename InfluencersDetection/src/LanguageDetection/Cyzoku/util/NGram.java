@@ -23,7 +23,7 @@ public class NGram {
     public NGram() {
         grams_ = new StringBuilder(" ");
         capitalword_ = false;
-        cjk_map = new HashMap<>();
+        cjk_map = new HashMap();
         for (String cjk_list : CJK_CLASS) {
             char representative = cjk_list.charAt(0);
             for (int i = 0; i < cjk_list.length(); ++i) {

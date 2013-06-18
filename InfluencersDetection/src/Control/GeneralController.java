@@ -1,8 +1,9 @@
 package Control;
 
 import CommunityLabelFinder.ControllerLabelsFinder;
-import Layout.LabelPositioner;
+import DataLaboratory.ValuesWritter;
 import Layout.Layout;
+import Metrics.FollowersCentileComputer;
 import Partition.ColorPartitions;
 import java.awt.Color;
 import java.util.ArrayList;
@@ -10,15 +11,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import net.clementlevallois.classes.Community;
-import net.clementlevallois.classes.LabelCreation;
-import net.clementlevallois.classes.NodeMetricsComputer;
-import net.clementlevallois.classes.RoleAlgo;
-import net.clementlevallois.classes.TempMetrics;
+import Model.Community;
+import Metrics.LabelCreation;
+import Metrics.NodeMetricsComputer;
+import Metrics.RoleAlgo;
+import Model.TempMetrics;
 import org.gephi.data.attributes.api.AttributeColumn;
 import org.gephi.data.attributes.api.AttributeModel;
 import org.gephi.data.attributes.api.AttributeOrigin;
-import org.gephi.data.attributes.api.AttributeRow;
 import org.gephi.data.attributes.api.AttributeTable;
 import org.gephi.data.attributes.api.AttributeType;
 import org.gephi.graph.api.Graph;
@@ -44,14 +44,16 @@ public class GeneralController implements Statistics, LongTask {
     private static int nbCommunities;
     private Graph graph;
     private static List<Community> communities;
-    private static int minCommunitySize = 10;
+    private static int minCommunitySize = 15;
     private static int medianInDegree;
+    private static AttributeColumn roleColumn;
+    private static Map<Integer, TempMetrics> tempMap;
 
     @Override
     public void execute(GraphModel graphModel, AttributeModel attributeModel) {
         this.graph = graphModel.getGraphVisible();
         graph.readLock();
-        Map<Integer, TempMetrics> tempMap = new HashMap();
+        tempMap = new HashMap();
         communities = new ArrayList();
 
 
@@ -65,7 +67,7 @@ public class GeneralController implements Statistics, LongTask {
         }
 
         //creates a "role" column
-        AttributeColumn roleColumn = nodeTable.getColumn("role");
+        roleColumn = nodeTable.getColumn("role");
         if (roleColumn != null) {
             nodeTable.removeColumn(roleColumn);
             roleColumn = nodeTable.addColumn("role", "Role", AttributeType.STRING, AttributeOrigin.COMPUTED, "");
@@ -83,26 +85,13 @@ public class GeneralController implements Statistics, LongTask {
         try {
             Progress.start(progressTicket, graph.getNodeCount());
 
-            double initModularity = 0;
-            double newModularity = 0;
-            boolean continueLoop = true;
-            float resolution = 0.7f;
             //finds communities, until a minimum differentiation between communities is achieved
-            while (continueLoop) {
-                Modularity mod = new Modularity();
-                mod.setResolution(resolution);
-                mod.execute(graphModel, attributeModel);
-                newModularity = mod.getModularity();
-                if (newModularity > initModularity) {
-                    continueLoop = true;
-                    resolution = resolution + 0.03f;
-                    initModularity = newModularity;
-                } else {
-                    System.out.println("final resolution: " + resolution);
-                    System.out.println("modularity achieved: " + newModularity);
-                    continueLoop = false;
-                }
-            }
+            float resolution = 1f;
+            Modularity mod = new Modularity();
+            mod.setRandom(true);
+            mod.setResolution(resolution);
+            mod.execute(graphModel, attributeModel);
+            
 
 
             //computes degree metrics
@@ -111,6 +100,9 @@ public class GeneralController implements Statistics, LongTask {
 
             //data structure to compute median indegree;
             List<Integer> sortedInDegrees = new ArrayList();
+
+            //data structure to compute median followers;
+            List<Integer> sortedFollowers = new ArrayList();
 
             for (Node node : graph.getNodes()) {
                 TempMetrics tm = new TempMetrics();
@@ -139,8 +131,11 @@ public class GeneralController implements Statistics, LongTask {
                     break;
                 }
 
-                //adds to the data structure to compute the median IndeGree;
+                //adds to the data structure to compute the median inDegree;
                 sortedInDegrees.add(tm.getInDegree());
+
+                //adds to the data structure to compute median followers
+                sortedFollowers.add(tm.getFollowers());
 
 
                 //updates the list of communities;
@@ -163,6 +158,11 @@ public class GeneralController implements Statistics, LongTask {
             Collections.sort(sortedInDegrees);
             medianInDegree = sortedInDegrees.get(Math.round((float) sortedInDegrees.size() / 2));
 
+            //adds the centile of followers to each node
+            FollowersCentileComputer fcc = new FollowersCentileComputer(tempMap, sortedFollowers);
+            fcc.compute();
+
+
             //colorizes communities with "I want hue" colors
             ColorPartitions.colorize(graph);
 
@@ -175,12 +175,20 @@ public class GeneralController implements Statistics, LongTask {
 
 
             //writes roles to Data Laboratory
-            for (Integer id : tempMap.keySet()) {
-                ((AttributeRow) graph.getNode(id).getNodeData().getAttributes()).setValue(roleColumn, tempMap.get(id).getRole());
-                if (cancel) {
-                    break;
-                }
-            }
+//            for (Integer id : tempMap.keySet()) {
+//                TempMetrics tm = tempMap.get(id);
+//                String role = tm.getRole();
+//                ((AttributeRow) graph.getNode(id).getNodeData().getAttributes()).setValue(roleColumn, role);
+//                ((AttributeRow) graph.getNode(id).getNodeData().getAttributes()).setValue("CommunityBridgers", 0.5f);
+//                if (cancel) {
+//                    break;
+//                }
+//            }
+
+            //writes roles to Data Laboratory
+            ValuesWritter vw = new ValuesWritter(graph, tempMap);
+            vw.writeRoleValues();
+            vw.writeAllRoleColumns();
 
             //detects labels for each community
             ControllerLabelsFinder clf = new ControllerLabelsFinder(graph, attributeModel, tempMap);
@@ -223,11 +231,21 @@ public class GeneralController implements Statistics, LongTask {
 
     @Override
     public String getReport() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<h2><b>Main Communities (at least 10 members)</b></h2><br/>");
+        sb.append("<br/>");
+        for (Community community : communities) {
+            if (community.getSize() < minCommunitySize) {
+                continue;
+            }
+            sb.append("- ").append(community.getLabel()).append(" (").append(community.getSize()).append(" members). Local star: @" + community.getLocalStar()).append(".<br />");
+            sb.append("<br />");
+        }
         String report = "<HTML> <BODY> <h1>Detection of Roles Report </h1> "
                 + "<hr>"
-                + "<br> <h2> Results: </h2>"
-                + "Average number: " + "value here" + "<br />"
-                + "Number of unconnected nodes: " + "<br />"
+                + "<br> <h2> Results: "
+                + nbCommunities + " communities detected.<br/> </h2>"
+                + sb.toString() + "<br />"
                 + "</BODY></HTML>";
         return report;
     }
@@ -261,5 +279,9 @@ public class GeneralController implements Statistics, LongTask {
 
     public static int getMedianInDegree() {
         return medianInDegree;
+    }
+
+    public static AttributeColumn getRoleColumn() {
+        return roleColumn;
     }
 }

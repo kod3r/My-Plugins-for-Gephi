@@ -1,4 +1,4 @@
-package net.clementlevallois.classes;
+package Metrics;
 
 import java.util.Comparator;
 import org.gephi.graph.api.Node;

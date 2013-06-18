@@ -41,36 +41,30 @@
  */
 package ToolUI;
 
+import Control.GeneralController;
+import FilteringOperations.FilterOnePartition;
 import Layout.Layout;
+import Model.Community;
+import java.awt.ItemSelectable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
-import javax.swing.JToggleButton;
 import org.gephi.data.attributes.api.AttributeColumn;
 import org.gephi.data.attributes.api.AttributeController;
-import org.gephi.data.attributes.api.AttributeModel;
-import org.gephi.filters.api.FilterController;
-import org.gephi.filters.api.Query;
-import org.gephi.filters.plugin.partition.PartitionBuilder;
 import org.gephi.graph.api.Graph;
 import org.gephi.graph.api.GraphController;
 import org.gephi.graph.api.GraphView;
 import org.gephi.graph.api.Node;
-import org.gephi.layout.api.LayoutController;
-import org.gephi.layout.plugin.forceAtlas.ForceAtlas;
-import org.gephi.layout.plugin.forceAtlas.ForceAtlasLayout;
-import org.gephi.partition.api.Part;
-import org.gephi.partition.api.Partition;
-import org.gephi.partition.api.PartitionController;
-import org.gephi.ranking.api.Ranking;
-import org.gephi.ranking.api.RankingController;
-import org.gephi.ranking.api.Transformer;
-import org.gephi.ranking.plugin.transformer.AbstractSizeTransformer;
 import org.gephi.tools.spi.MouseClickEventListener;
 import org.gephi.tools.spi.NodeClickEventListener;
 import org.gephi.tools.spi.Tool;
@@ -82,27 +76,6 @@ import org.gephi.visualization.opengl.text.ColorMode;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.ServiceProvider;
 
-/**
- * Tool which reacts to clicks on the canvas by adding nodes and edges.
- * <p>
- * The tool works with two
- * <code>ToolEventListener</code> listeners: One {@link MouseClickEventListener}
- * to react on a click on a empty part of the canvas and one
- * {@link NodeClickEventListener} to react on a click on multiple nodes. The
- * tool is creating a node at the mouse location and adds edges from the newly
- * created node to all selected nodes. That works when the user increases its
- * mouse selection area.
- * <p>
- * The tool also uses some non-api methods of
- * <code>VizController</code>. It's not really recommended at this point but we
- * needed it for the mouse position. The new Visualization API coming in a
- * future version will expose much more things...
- * <p>
- * This tool class also has an UI class which displays a simple checkbox in the
- * properties bar. The checkbox triggers a layout algorithm.
- *
- * @author Mathieu Bastian
- */
 @ServiceProvider(service = Tool.class)
 public class ShowLabels implements Tool {
 
@@ -186,6 +159,11 @@ public class ShowLabels implements Tool {
         return ToolSelectionType.SELECTION;
     }
 
+    static private String selectedString(ItemSelectable is) {
+        Object selected[] = is.getSelectedObjects();
+        return ((selected.length == 0) ? "null" : (String) selected[0]);
+    }
+
     private static class ShowLabelsToolUI implements ToolUI {
 
         private boolean communityLabelsSelected = false;
@@ -198,9 +176,10 @@ public class ShowLabels implements Tool {
             final JCheckBox checkBoxSpecialists;
             final JCheckBox checkBoxLocalConnectors;
             final JCheckBox checkBoxCommunityBridgers;
+            final JCheckBox checkBoxGlobalAuthorities;
             final JButton labelAdjustButton;
 
-            labelAdjustButton = new JButton("fix label positions");
+            labelAdjustButton = new JButton("fix labels");
             labelAdjustButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -209,9 +188,47 @@ public class ShowLabels implements Tool {
                 }
             });
 
+            // add a selector for communities
+            DefaultComboBoxModel model = new DefaultComboBoxModel();
+            List<String> labelsCommunities = new ArrayList();
+            for (Community community : GeneralController.getCommunities()) {
+                labelsCommunities.add(community.getLabel());
+            }
+            Collections.sort(labelsCommunities);
+            model.addElement("show all communities");
+            for (String label : labelsCommunities) {
+                model.addElement(label);
+            }
+
+            JComboBox comboBox = new JComboBox(model);
+            ActionListener actionListener = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    System.out.println("Command: " + actionEvent.getActionCommand());
+                    ItemSelectable is = (ItemSelectable) actionEvent.getSource();
+                    String selectedCommunity = selectedString(is);
+                    int idCommunity = -99;
+                    for (Community community : GeneralController.getCommunities()) {
+                        if (selectedCommunity.equals(community.getLabel())) {
+                            idCommunity = community.getId();
+                        } else if (selectedCommunity.equals("show all communities")) {
+                            idCommunity = -99;
+                        }
+                    }
+                    FilterOnePartition fop = new FilterOnePartition(graph);
+                    fop.partitionInteger("Modularity Class", idCommunity);
+
+                }
+            };
+
+
+
+            comboBox.addActionListener(actionListener);
             //Add a checkbox in the property bar to run a layout algorithm
             checkBoxRockStars = new JCheckBox("rock stars");
-            checkBoxRockStars.addActionListener(new ActionListener() {
+
+            checkBoxRockStars.addActionListener(
+                    new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (checkBoxRockStars.isSelected()) {
@@ -237,7 +254,9 @@ public class ShowLabels implements Tool {
             });
 
             checkBoxSpecialists = new JCheckBox("specialists");
-            checkBoxSpecialists.addActionListener(new ActionListener() {
+
+            checkBoxSpecialists.addActionListener(
+                    new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (checkBoxSpecialists.isSelected()) {
@@ -262,8 +281,10 @@ public class ShowLabels implements Tool {
                 }
             });
 
-            checkBoxLocalConnectors = new JCheckBox("local stars");
-            checkBoxLocalConnectors.addActionListener(new ActionListener() {
+            checkBoxLocalConnectors = new JCheckBox("local auth.");
+
+            checkBoxLocalConnectors.addActionListener(
+                    new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (checkBoxLocalConnectors.isSelected()) {
@@ -273,13 +294,13 @@ public class ShowLabels implements Tool {
                         }
 
                         for (Node node : graph.getNodes().toArray()) {
-                            if (node.getAttributes().getValue("role").equals("local star")) {
+                            if (node.getAttributes().getValue("role").equals("local authority")) {
                                 node.getNodeData().getTextData().setVisible(true);
                             }
                         }
                     } else {
                         for (Node node : graph.getNodes().toArray()) {
-                            if (node.getAttributes().getValue("role").equals("local star")) {
+                            if (node.getAttributes().getValue("role").equals("local authority")) {
                                 node.getNodeData().getTextData().setVisible(false);
                             }
                         }
@@ -288,8 +309,10 @@ public class ShowLabels implements Tool {
                 }
             });
 
-            checkBoxCommunityBridgers = new JCheckBox("community bridgers");
-            checkBoxCommunityBridgers.addActionListener(new ActionListener() {
+            checkBoxCommunityBridgers = new JCheckBox("bridgers");
+
+            checkBoxCommunityBridgers.addActionListener(
+                    new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (checkBoxCommunityBridgers.isSelected()) {
@@ -314,8 +337,37 @@ public class ShowLabels implements Tool {
                 }
             });
 
+            checkBoxGlobalAuthorities = new JCheckBox("global auth.");
 
-            checkBoxCommunityLabels = new JCheckBox("community labels");
+            checkBoxGlobalAuthorities.addActionListener(
+                    new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (checkBoxGlobalAuthorities.isSelected()) {
+                        if (!communityLabelsSelected) {
+                            ColorMode[] cm = VizController.getInstance().getTextManager().getColorModes();
+                            VizController.getInstance().getTextManager().getModel().setColorMode((ColorMode) cm[0]);
+                        }
+
+                        for (Node node : graph.getNodes().toArray()) {
+                            if (node.getAttributes().getValue("role").equals("global authority")) {
+                                node.getNodeData().getTextData().setVisible(true);
+                            }
+                        }
+                    } else {
+                        for (Node node : graph.getNodes().toArray()) {
+                            if (node.getAttributes().getValue("role").equals("global authority")) {
+                                node.getNodeData().getTextData().setVisible(false);
+                            }
+                        }
+                    }
+
+                }
+            });
+
+
+            checkBoxCommunityLabels = new JCheckBox("communities");
+
             checkBoxCommunityLabels.addActionListener(
                     new ActionListener() {
                 @Override
@@ -327,7 +379,7 @@ public class ShowLabels implements Tool {
                         VizController.getInstance().getTextManager().getModel().setColorMode((ColorMode) cm[1]);
 
                         for (Node node : graph.getNodes().toArray()) {
-                            if ((Integer) node.getAttributes().getValue("Modularity Class") == -2) {
+                            if ((Integer) node.getAttributes().getValue("Modularity Class") >1000) {
                                 node.getNodeData().getTextData().setVisible(true);
                             }
 
@@ -337,7 +389,7 @@ public class ShowLabels implements Tool {
                         ColorMode[] cm = VizController.getInstance().getTextManager().getColorModes();
                         VizController.getInstance().getTextManager().getModel().setColorMode((ColorMode) cm[0]);
                         for (Node node : graph.getNodes().toArray()) {
-                            if ((Integer) node.getAttributes().getValue("Modularity Class") == -2) {
+                            if ((Integer) node.getAttributes().getValue("Modularity Class") > 1000) {
                                 node.getNodeData().getTextData().setVisible(false);
                             }
 
@@ -346,12 +398,18 @@ public class ShowLabels implements Tool {
                 }
             });
             labelsUI.add(checkBoxRockStars);
+
+            labelsUI.add(checkBoxGlobalAuthorities);
+
             labelsUI.add(checkBoxCommunityBridgers);
+
             labelsUI.add(checkBoxCommunityLabels);
+
             labelsUI.add(checkBoxLocalConnectors);
+
             labelsUI.add(checkBoxSpecialists);
-            JSeparator js = new JSeparator();
-            labelsUI.add(js);
+
+            labelsUI.add(comboBox);
             labelsUI.add(labelAdjustButton);
             return labelsUI;
         }
@@ -363,12 +421,12 @@ public class ShowLabels implements Tool {
 
         @Override
         public String getName() {
-            return "Show Labels";
+            return "Show roles";
         }
 
         @Override
         public String getDescription() {
-            return "Show labels created by the influencers detection plugin";
+            return "Show labels created by the detector of roles";
         }
 
         @Override

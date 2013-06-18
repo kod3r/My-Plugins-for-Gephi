@@ -1,4 +1,4 @@
-package net.clementlevallois.classes;
+package DefaultPluginClasses;
 
 import java.awt.Component;
 import javax.swing.DefaultListCellRenderer;

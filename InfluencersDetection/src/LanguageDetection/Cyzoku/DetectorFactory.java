@@ -13,8 +13,6 @@ import net.arnx.jsonic.JSONException;
 
 import LanguageDetection.Cyzoku.util.LangProfile;
 import java.io.InputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Language Detector Factory Class
@@ -42,8 +40,8 @@ public class DetectorFactory {
     public Long seed = null;
 
     private DetectorFactory() {
-        wordLangProbMap = new HashMap<>();
-        langlist = new ArrayList<>();
+        wordLangProbMap = new HashMap();
+        langlist = new ArrayList();
     }
     static private DetectorFactory instance_ = new DetectorFactory();
 

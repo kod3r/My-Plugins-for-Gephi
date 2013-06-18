@@ -317,7 +317,7 @@ public class Detector {
      * @return n-grams list
      */
     private ArrayList<String> extractNGrams() {
-        ArrayList<String> list = new ArrayList<>();
+        ArrayList<String> list = new ArrayList();
         NGram ngram = new NGram();
         for (int i = 0; i < text.length(); ++i) {
             ngram.addChar(text.charAt(i));

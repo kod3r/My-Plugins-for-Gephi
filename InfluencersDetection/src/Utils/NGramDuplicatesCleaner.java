@@ -30,7 +30,6 @@ public class NGramDuplicatesCleaner {
         Set<String> setCurrentSubNGrams;
         Iterator<String> setCurrentSubNGramsIterator;
         String string;
-        String[] termsInBigram;
         int maxNGrams = 2;
         itFreqList = setNGrams.entrySet().iterator();
         while (itFreqList.hasNext()) {

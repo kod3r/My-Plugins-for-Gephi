@@ -1,4 +1,4 @@
-package net.clementlevallois.classes;
+package DefaultPluginClasses;
 
 import Control.GeneralController;
 import org.gephi.statistics.spi.Statistics;
@@ -14,7 +14,7 @@ public class InfluencersDetectionMetricBuilder implements StatisticsBuilder {
 
     @Override
     public String getName() {
-        return "Influncers Detection";
+        return "Detector of roles in the network";
     }
 
     @Override

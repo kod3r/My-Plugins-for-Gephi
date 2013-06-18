@@ -35,7 +35,7 @@ public class LanguageDetector {
 
         if (status != null && status.trim().split(" ").length > 2) {
             detector.append(status);
-            System.out.println("text: " + status);
+//            System.out.println("text: " + status);
             lang = detector.detect();
         } else {
             lang = null;

@@ -31,6 +31,7 @@ public class Layout {
         forceAtlas2.setGraphModel(graphModel);
         forceAtlas2.setAdjustSizes(true);
         forceAtlas2.setScalingRatio(30.0);
+        forceAtlas2.setJitterTolerance(0.5);
         forceAtlas2.setBarnesHutOptimize(true);
         forceAtlas2.setThreadsCount(Runtime.getRuntime().availableProcessors() * 2);
 

@@ -1,4 +1,4 @@
-package net.clementlevallois.classes;
+package DefaultPluginClasses;
 
 import Control.GeneralController;
 import javax.swing.JPanel;
@@ -47,15 +47,12 @@ public class InfluencersDetectionUI implements StatisticsUI {
 
     @Override
     public String getValue() {
-        if (this.IDMetric != null) {
-            return "" + IDMetric.getReport();
-        }
-        return null;
+            return "done";
     }
 
     @Override
     public String getDisplayName() {
-        return "Role";
+        return "Detector of roles";
 
     }
 
@@ -72,6 +69,6 @@ public class InfluencersDetectionUI implements StatisticsUI {
 
     @Override
     public String getShortDescription() {
-        return "Detects Influencers";
+        return "Detects agents with specific roles in the network";
     }
 }

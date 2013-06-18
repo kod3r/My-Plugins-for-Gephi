@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.clementlevallois.classes;
+package Model;
 
 /**
  *
@@ -24,6 +24,12 @@ public class TempMetrics {
     private int nbDiffCommunitiesIn;
     private int nbDiffCommunities;
     private float localEigenvectorCentrality;
+    private float communityBridgerScore;
+    private float localStarScore;
+    private float specialistScore;
+    private int centileFollowers;
+    private float eigenvectorCentrality;
+    private float globalAuthorityScore;
 
     public TempMetrics() {
     }
@@ -139,8 +145,52 @@ public class TempMetrics {
     public void setLocalEigenvectorCentrality(float localEigenvectorCentrality) {
         this.localEigenvectorCentrality = localEigenvectorCentrality;
     }
-    
-    
-    
-    
+
+    public float getCommunityBridgerScore() {
+        return communityBridgerScore;
+    }
+
+    public void setCommunityBridgerScore(float communityBridgerScore) {
+        this.communityBridgerScore = communityBridgerScore;
+    }
+
+    public float getLocalStarScore() {
+        return localStarScore;
+    }
+
+    public void setLocalStarScore(float localStarScore) {
+        this.localStarScore = localStarScore;
+    }
+
+    public float getSpecialistScore() {
+        return specialistScore;
+    }
+
+    public void setSpecialistScore(float specialistScore) {
+        this.specialistScore = specialistScore;
+    }
+
+    public int getCentileFollowers() {
+        return centileFollowers;
+    }
+
+    public void setCentileFollowers(int centileFollowers) {
+        this.centileFollowers = centileFollowers;
+    }
+
+    public float getEigenvectorCentrality() {
+        return eigenvectorCentrality;
+    }
+
+    public void setEigenvectorCentrality(float eigenvectorCentrality) {
+        this.eigenvectorCentrality = eigenvectorCentrality;
+    }
+
+    public float getGlobalAuthorityScore() {
+        return globalAuthorityScore;
+    }
+
+    public void setGlobalAuthorityScore(float globalAuthorityScore) {
+        this.globalAuthorityScore = globalAuthorityScore;
+    }
 }

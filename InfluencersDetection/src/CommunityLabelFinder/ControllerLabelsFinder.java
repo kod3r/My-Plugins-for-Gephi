@@ -20,8 +20,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import net.clementlevallois.classes.Community;
-import net.clementlevallois.classes.TempMetrics;
+import Model.Community;
+import Model.TempMetrics;
 import org.gephi.data.attributes.api.AttributeColumn;
 import org.gephi.data.attributes.api.AttributeModel;
 import org.gephi.data.attributes.api.AttributeTable;
@@ -106,7 +106,7 @@ public class ControllerLabelsFinder {
         //launches the detection
 
         List<Community> communities = new ArrayList();
-        CommunityLabelFinder clf = new CommunityLabelFinder(graph, 1, mainLang);
+        CommunityLabelFinder clf = new CommunityLabelFinder(graph, 1, mainLang,map);
         clf.collectDescriptions();
         clf.findMostFrequentsLabelsInTotal(stopwordsSet);
 
@@ -114,7 +114,7 @@ public class ControllerLabelsFinder {
             if (community.getSize() < GeneralController.getMinCommunitySize()) {
                 continue;
             }
-            CommunityLabelFinder clf2 = new CommunityLabelFinder(graph, community.getId(), mainLang);
+            CommunityLabelFinder clf2 = new CommunityLabelFinder(graph, community.getId(), mainLang,map);
             String lang = "";
             lang = clf2.determineLanguageFromDescription(mainLang);
             if (mainLang != null && !lang.equals(mainLang) & !lang.equals("")) {

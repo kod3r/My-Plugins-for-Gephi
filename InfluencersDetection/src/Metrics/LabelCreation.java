@@ -2,8 +2,10 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.clementlevallois.classes;
+package Metrics;
 
+import Model.TempMetrics;
+import Model.Community;
 import Control.GeneralController;
 import java.util.HashSet;
 import java.util.Map;
@@ -49,14 +51,11 @@ public class LabelCreation {
 
 
 
-        Set<String> roles = new HashSet();
-
         //create a new node for each label
         GraphModel gm = graph.getGraphModel();
         for (int id : map.keySet()) {
             TempMetrics tm = map.get(id);
             if (!tm.getRole().equals("agent")) {
-                roles.add(tm.getRole());
                 //resize the node with this special role to a size of 20
                 graph.getNode(id).getNodeData().setSize(20);
                 graph.getNode(id).getNodeData().getTextData().setSize(2);
@@ -81,13 +80,13 @@ public class LabelCreation {
             }
             Node node = gm.factory().newNode();
             node.getNodeData().setLabel(community.getLabel());
-            node.getNodeData().getAttributes().setValue("Modularity Class", -2);
-            node.getNodeData().setSize(25f);
+            node.getNodeData().getAttributes().setValue("Modularity Class", community.getId()+5000);
+            node.getNodeData().setSize(30f);
             node.getNodeData().getTextData().setSize(3);
 
             Edge edge = null;
             for (Node node2 : graph.getNodes().toArray()) {
-                if ((Integer) node2.getAttributes().getValue("Modularity Class") == community.getId() & node2.getAttributes().getValue("role").equals("local star")) {
+                if ((Integer) node2.getAttributes().getValue("Modularity Class") == community.getId() & node2.getAttributes().getValue("role").equals("local authority")) {
                     node.getNodeData().setR(node2.getNodeData().r());
                     node.getNodeData().setG(node2.getNodeData().g());
                     node.getNodeData().setB(node2.getNodeData().b());
@@ -108,37 +107,5 @@ public class LabelCreation {
 
 
 
-//        GraphView mainView = graph.getView();
-
-
-//        //filter the graph to keep only these new nodes.
-//        FilterController filterController = Lookup.getDefault().lookup(FilterController.class);
-//        PartitionController pc = Lookup.getDefault().lookup(PartitionController.class);
-//        Partition p = pc.buildPartition(attributeModel.getNodeTable().getColumn("Modularity Class"), graph);
-//
-//        NodePartitionFilter partitionFilter = new NodePartitionFilter(p);
-//        partitionFilter.unselectAll();
-//        Part part;
-//        part = p.getPartFromValue(-1);
-//        partitionFilter.addPart(part);
-//        part = p.getPartFromValue(-2);
-//        partitionFilter.addPart(part);
-//
-//        Query query = filterController.createQuery(partitionFilter);
-//        GraphView view = filterController.filter(query);
-//        graph.getGraphModel().setVisibleView(view); //Set the filter result as the visible view
-//
-//        //resize labels only for the nodes selected in the partition
-//        rc = Lookup.getDefault().lookup(RankingController.class);
-//        col = attributeModel.getNodeTable().getColumn("Modularity Class");
-//        dummyRanking = rc.getModel().getRanking(Ranking.NODE_ELEMENT, col.getId());
-//        labelSizeTransformer = (AbstractSizeTransformer) rc.getModel().getTransformer(Ranking.NODE_ELEMENT, Transformer.LABEL_SIZE);
-//        labelSizeTransformer.setMinSize(2);
-//        labelSizeTransformer.setMaxSize(2);
-//        rc.transform(dummyRanking, labelSizeTransformer);
-//
-//        filterController.remove(query);
-//        graph.getGraphModel().setVisibleView(mainView);
-//
     }
 }
