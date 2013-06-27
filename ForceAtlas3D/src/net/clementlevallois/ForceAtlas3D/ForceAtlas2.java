@@ -1,48 +1,46 @@
 package net.clementlevallois.ForceAtlas3D;
 
 /*
-Copyright 2008-2011 Gephi
-Authors : Mathieu Jacomy <mathieu.jacomy@gmail.com>
-Website : http://www.gephi.org
+ Copyright 2008-2011 Gephi
+ Authors : Mathieu Jacomy <mathieu.jacomy@gmail.com>
+ Website : http://www.gephi.org
 
-This file is part of Gephi.
+ This file is part of Gephi.
 
-DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-Copyright 2011 Gephi Consortium. All rights reserved.
+ Copyright 2011 Gephi Consortium. All rights reserved.
 
-The contents of this file are subject to the terms of either the GNU
-General Public License Version 3 only ("GPL") or the Common
-Development and Distribution License("CDDL") (collectively, the
-"License"). You may not use this file except in compliance with the
-License. You can obtain a copy of the License at
-http://gephi.org/about/legal/license-notice/
-or /cddl-1.0.txt and /gpl-3.0.txt. See the License for the
-specific language governing permissions and limitations under the
-License.  When distributing the software, include this License Header
-Notice in each file and include the License files at
-/cddl-1.0.txt and /gpl-3.0.txt. If applicable, add the following below the
-License Header, with the fields enclosed by brackets [] replaced by
-your own identifying information:
-"Portions Copyrighted [year] [name of copyright owner]"
+ The contents of this file are subject to the terms of either the GNU
+ General Public License Version 3 only ("GPL") or the Common
+ Development and Distribution License("CDDL") (collectively, the
+ "License"). You may not use this file except in compliance with the
+ License. You can obtain a copy of the License at
+ http://gephi.org/about/legal/license-notice/
+ or /cddl-1.0.txt and /gpl-3.0.txt. See the License for the
+ specific language governing permissions and limitations under the
+ License.  When distributing the software, include this License Header
+ Notice in each file and include the License files at
+ /cddl-1.0.txt and /gpl-3.0.txt. If applicable, add the following below the
+ License Header, with the fields enclosed by brackets [] replaced by
+ your own identifying information:
+ "Portions Copyrighted [year] [name of copyright owner]"
 
-If you wish your version of this file to be governed by only the CDDL
-or only the GPL Version 3, indicate your decision by adding
-"[Contributor] elects to include this software in this distribution
-under the [CDDL or GPL Version 3] license." If you do not indicate a
-single choice of license, a recipient has the option to distribute
-your version of this file under either the CDDL, the GPL Version 3 or
-to extend the choice of license to its licensees as provided above.
-However, if you add GPL Version 3 code and therefore, elected the GPL
-Version 3 license, then the option applies only if the new code is
-made subject to such option by the copyright holder.
+ If you wish your version of this file to be governed by only the CDDL
+ or only the GPL Version 3, indicate your decision by adding
+ "[Contributor] elects to include this software in this distribution
+ under the [CDDL or GPL Version 3] license." If you do not indicate a
+ single choice of license, a recipient has the option to distribute
+ your version of this file under either the CDDL, the GPL Version 3 or
+ to extend the choice of license to its licensees as provided above.
+ However, if you add GPL Version 3 code and therefore, elected the GPL
+ Version 3 license, then the option applies only if the new code is
+ made subject to such option by the copyright holder.
 
-Contributor(s): Clement Levallois <www.clementlevallois.net>
+ Contributor(s): Clement Levallois <www.clementlevallois.net>
 
-Portions Copyrighted 2011 Gephi Consortium.
+ Portions Copyrighted 2011 Gephi Consortium.
  */
-
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -70,6 +68,7 @@ import org.openide.util.NbBundle;
 
 /**
  * ForceAtlas 2 Layout, manages each step of the computations.
+ *
  * @author Mathieu Jacomy
  */
 public class ForceAtlas2 implements Layout {
@@ -162,6 +161,9 @@ public class ForceAtlas2 implements Layout {
             nLayout.dx = 0;
             nLayout.dy = 0;
             nLayout.dz = 0;
+            if (!threeD) {
+                nData.setZ((float) (Math.random() * 0.01));
+            }
         }
 
         // If Barnes Hut active, initialize root region
@@ -183,7 +185,7 @@ public class ForceAtlas2 implements Layout {
 
         // Repulsion (and gravity)
         // NB: Muti-threaded
-        RepulsionForce Repulsion = ForceFactory.builder.buildRepulsion(isAdjustSizes(), getScalingRatio(),threeD);
+        RepulsionForce Repulsion = ForceFactory.builder.buildRepulsion(isAdjustSizes(), getScalingRatio(), threeD);
 
         int taskCount = 8 * currentThreadCount;  // The threadPool Executor Service will manage the fetching of tasks and threads.
         // We make more tasks than threads because some tasks may need more time to compute.
@@ -191,7 +193,7 @@ public class ForceAtlas2 implements Layout {
         for (int t = taskCount; t > 0; t--) {
             int from = (int) Math.floor(nodes.length * (t - 1) / taskCount);
             int to = (int) Math.floor(nodes.length * t / taskCount);
-            Future future = pool.submit(new NodesThread(nodes, from, to, isBarnesHutOptimize(), getBarnesHutTheta(), getGravity(), (isStrongGravityMode()) ? (ForceFactory.builder.getStrongGravity(getScalingRatio(),threeD)) : (Repulsion), getScalingRatio(), rootRegion, Repulsion));
+            Future future = pool.submit(new NodesThread(nodes, from, to, isBarnesHutOptimize(), getBarnesHutTheta(), getGravity(), (isStrongGravityMode()) ? (ForceFactory.builder.getStrongGravity(getScalingRatio(), threeD)) : (Repulsion), getScalingRatio(), rootRegion, Repulsion));
             threads.add(future);
         }
         for (Future future : threads) {
@@ -205,7 +207,7 @@ public class ForceAtlas2 implements Layout {
         }
 
         // Attraction
-        AttractionForce Attraction = ForceFactory.builder.buildAttraction(threeD,isLinLogMode(), isOutboundAttractionDistribution(), isAdjustSizes(), 1 * ((isOutboundAttractionDistribution()) ? (outboundAttCompensation) : (1)));
+        AttractionForce Attraction = ForceFactory.builder.buildAttraction(threeD, isLinLogMode(), isOutboundAttractionDistribution(), isAdjustSizes(), 1 * ((isOutboundAttractionDistribution()) ? (outboundAttCompensation) : (1)));
         if (getEdgeWeightInfluence() == 0) {
             for (Edge e : edges) {
                 Attraction.apply(e.getSource(), e.getTarget(), 1);
@@ -227,9 +229,9 @@ public class ForceAtlas2 implements Layout {
             NodeData nData = n.getNodeData();
             ForceAtlas2LayoutData nLayout = nData.getLayoutData();
             if (!nData.isFixed()) {
-                double swinging = Math.sqrt(Math.pow(nLayout.old_dx - nLayout.dx, 2) + Math.pow(nLayout.old_dy - nLayout.dy, 2)+ Math.pow(nLayout.old_dz - nLayout.dz, 2));
+                double swinging = Math.sqrt(Math.pow(nLayout.old_dx - nLayout.dx, 2) + Math.pow(nLayout.old_dy - nLayout.dy, 2) + Math.pow(nLayout.old_dz - nLayout.dz, 2));
                 totalSwinging += nLayout.mass * swinging;   // If the node has a burst change of direction, then it's not converging.
-                totalEffectiveTraction += nLayout.mass * 0.5 * Math.sqrt(Math.pow(nLayout.old_dx + nLayout.dx, 2) + Math.pow(nLayout.old_dy + nLayout.dy, 2)+ Math.pow(nLayout.old_dz + nLayout.dz, 2));
+                totalEffectiveTraction += nLayout.mass * 0.5 * Math.sqrt(Math.pow(nLayout.old_dx + nLayout.dx, 2) + Math.pow(nLayout.old_dy + nLayout.dy, 2) + Math.pow(nLayout.old_dz + nLayout.dz, 2));
             }
         }
         // We want that swingingMovement < tolerance * convergenceMovement
@@ -249,16 +251,18 @@ public class ForceAtlas2 implements Layout {
 
                     // Adaptive auto-speed: the speed of each node is lowered
                     // when the node swings.
-                    double swinging = Math.sqrt((nLayout.old_dx - nLayout.dx) * (nLayout.old_dx - nLayout.dx) + (nLayout.old_dy - nLayout.dy) * (nLayout.old_dy - nLayout.dy)+ (nLayout.old_dz - nLayout.dz) * (nLayout.old_dz - nLayout.dz));
+                    double swinging = Math.sqrt((nLayout.old_dx - nLayout.dx) * (nLayout.old_dx - nLayout.dx) + (nLayout.old_dy - nLayout.dy) * (nLayout.old_dy - nLayout.dy) + (nLayout.old_dz - nLayout.dz) * (nLayout.old_dz - nLayout.dz));
                     double factor = 0.1 * speed / (1f + speed * Math.sqrt(swinging));
 
-                    double df = Math.sqrt(Math.pow(nLayout.dx, 2) + Math.pow(nLayout.dy, 2)+ Math.pow(nLayout.dz, 2));
+                    double df = Math.sqrt(Math.pow(nLayout.dx, 2) + Math.pow(nLayout.dy, 2) + Math.pow(nLayout.dz, 2));
                     factor = Math.min(factor * df, 10.) / df;
 
                     double x = nData.x() + nLayout.dx * factor;
                     double y = nData.y() + nLayout.dy * factor;
-                    double z = nData.z() + nLayout.dz * factor;
-
+                    double z = Math.random() * 0.01;
+                    if (threeD) {
+                        z = nData.z() + nLayout.dz * factor;
+                    }
                     nData.setX((float) x);
                     nData.setY((float) y);
                     nData.setZ((float) z);
@@ -272,14 +276,17 @@ public class ForceAtlas2 implements Layout {
 
                     // Adaptive auto-speed: the speed of each node is lowered
                     // when the node swings.
-                    double swinging = Math.sqrt((nLayout.old_dx - nLayout.dx) * (nLayout.old_dx - nLayout.dx) + (nLayout.old_dy - nLayout.dy) * (nLayout.old_dy - nLayout.dy)+ (nLayout.old_dz - nLayout.dz) * (nLayout.old_dz - nLayout.dz));
+                    double swinging = Math.sqrt((nLayout.old_dx - nLayout.dx) * (nLayout.old_dx - nLayout.dx) + (nLayout.old_dy - nLayout.dy) * (nLayout.old_dy - nLayout.dy) + (nLayout.old_dz - nLayout.dz) * (nLayout.old_dz - nLayout.dz));
                     //double factor = speed / (1f + Math.sqrt(speed * swinging));
                     double factor = speed / (1f + speed * Math.sqrt(swinging));
 
                     double x = nData.x() + nLayout.dx * factor;
                     double y = nData.y() + nLayout.dy * factor;
-                    double z = nData.z() + nLayout.dz * factor;
+                    double z = Math.random() * 0.01;
 
+                    if (threeD) {
+                        z = nData.z() + nLayout.dz * factor;
+                    }
                     nData.setX((float) x);
                     nData.setY((float) y);
                     nData.setZ((float) z);
@@ -579,7 +586,4 @@ public class ForceAtlas2 implements Layout {
     public void setThreeD(Boolean threeD) {
         this.threeD = threeD;
     }
-    
-    
-    
 }
