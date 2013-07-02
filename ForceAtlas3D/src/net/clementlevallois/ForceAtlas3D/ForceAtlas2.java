@@ -62,6 +62,10 @@ import org.gephi.layout.spi.Layout;
 import org.gephi.layout.spi.LayoutBuilder;
 import org.gephi.layout.spi.LayoutProperty;
 import org.gephi.project.api.Workspace;
+import org.gephi.visualization.VizController;
+import org.gephi.visualization.api.initializer.Modeler;
+import org.gephi.visualization.api.initializer.NodeModeler;
+import org.gephi.visualization.api.objects.ModelClass;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.NbBundle;
@@ -96,6 +100,8 @@ public class ForceAtlas2 implements Layout {
     //Dynamic Weight
     private TimeInterval timeInterval;
     private ExecutorService pool;
+    private ModelClass nodeClass;
+    private NodeModeler originalNodeModeler;
 
     public ForceAtlas2(ForceAtlas2Builder layoutBuilder) {
         this.layoutBuilder = layoutBuilder;
@@ -129,6 +135,10 @@ public class ForceAtlas2 implements Layout {
             nLayout.dz = 0;
         }
 
+        nodeClass = VizController.getInstance().getModelClassLibrary().getNodeClass();
+        originalNodeModeler = (NodeModeler) nodeClass.getCurrentModeler();
+
+
         pool = Executors.newFixedThreadPool(threadCount);
         currentThreadCount = threadCount;
     }
@@ -139,13 +149,27 @@ public class ForceAtlas2 implements Layout {
         if (graphModel == null) {
             return;
         }
+
+        if (threeD) {
+            VizController.getInstance().getVizModel().setUse3d(true);
+            for (Modeler modeler : nodeClass.getModelers()) {
+                NodeModeler nodeModeler = (NodeModeler) modeler;
+                if (nodeModeler.is3d()) {
+                    nodeClass.setCurrentModeler(nodeModeler);
+                }
+            }
+        } else {
+            VizController.getInstance().getVizModel().setUse3d(false);
+            nodeClass.setCurrentModeler(originalNodeModeler);
+        }
+
+
         graph = graphModel.getHierarchicalGraphVisible();
         this.timeInterval = DynamicUtilities.getVisibleInterval(dynamicModel);
 
         graph.readLock();
         Node[] nodes = graph.getNodes().toArray();
         Edge[] edges = graph.getEdgesAndMetaEdges().toArray();
-
         // Initialise layout data
         for (Node n : nodes) {
             if (n.getNodeData().getLayoutData() == null || !(n.getNodeData().getLayoutData() instanceof ForceAtlas2LayoutData)) {
@@ -182,15 +206,14 @@ public class ForceAtlas2 implements Layout {
             }
             outboundAttCompensation /= nodes.length;
         }
-
         // Repulsion (and gravity)
         // NB: Muti-threaded
         RepulsionForce Repulsion = ForceFactory.builder.buildRepulsion(isAdjustSizes(), getScalingRatio(), threeD);
-
         int taskCount = 8 * currentThreadCount;  // The threadPool Executor Service will manage the fetching of tasks and threads.
         // We make more tasks than threads because some tasks may need more time to compute.
         ArrayList<Future> threads = new ArrayList();
-        for (int t = taskCount; t > 0; t--) {
+        for (int t = taskCount;
+                t > 0; t--) {
             int from = (int) Math.floor(nodes.length * (t - 1) / taskCount);
             int to = (int) Math.floor(nodes.length * t / taskCount);
             Future future = pool.submit(new NodesThread(nodes, from, to, isBarnesHutOptimize(), getBarnesHutTheta(), getGravity(), (isStrongGravityMode()) ? (ForceFactory.builder.getStrongGravity(getScalingRatio(), threeD)) : (Repulsion), getScalingRatio(), rootRegion, Repulsion));
@@ -205,14 +228,16 @@ public class ForceAtlas2 implements Layout {
                 Exceptions.printStackTrace(ex);
             }
         }
-
         // Attraction
         AttractionForce Attraction = ForceFactory.builder.buildAttraction(threeD, isLinLogMode(), isOutboundAttractionDistribution(), isAdjustSizes(), 1 * ((isOutboundAttractionDistribution()) ? (outboundAttCompensation) : (1)));
-        if (getEdgeWeightInfluence() == 0) {
+
+        if (getEdgeWeightInfluence()
+                == 0) {
             for (Edge e : edges) {
                 Attraction.apply(e.getSource(), e.getTarget(), 1);
             }
-        } else if (getEdgeWeightInfluence() == 1) {
+        } else if (getEdgeWeightInfluence()
+                == 1) {
             for (Edge e : edges) {
                 Attraction.apply(e.getSource(), e.getTarget(), getWeight(e));
             }
@@ -221,7 +246,6 @@ public class ForceAtlas2 implements Layout {
                 Attraction.apply(e.getSource(), e.getTarget(), Math.pow(getWeight(e), getEdgeWeightInfluence()));
             }
         }
-
         // Auto adjust speed
         double totalSwinging = 0d;  // How much irregular movement
         double totalEffectiveTraction = 0d;  // Hom much useful movement
@@ -236,7 +260,6 @@ public class ForceAtlas2 implements Layout {
         }
         // We want that swingingMovement < tolerance * convergenceMovement
         double targetSpeed = getJitterTolerance() * getJitterTolerance() * totalEffectiveTraction / totalSwinging;
-
         // But the speed shoudn't rise too much too quickly, since it would make the convergence drop dramatically.
         double maxRise = 0.5;   // Max rise: 50%
         speed = speed + Math.min(targetSpeed - speed, maxRise * speed);
@@ -293,6 +316,7 @@ public class ForceAtlas2 implements Layout {
                 }
             }
         }
+
         graph.readUnlockAll();
     }
 
@@ -317,6 +341,8 @@ public class ForceAtlas2 implements Layout {
         final String FORCEATLAS2_BEHAVIOR = NbBundle.getMessage(getClass(), "ForceAtlas2.behavior");
         final String FORCEATLAS2_PERFORMANCE = NbBundle.getMessage(getClass(), "ForceAtlas2.performance");
         final String FORCEATLAS2_THREADS = NbBundle.getMessage(getClass(), "ForceAtlas2.threads");
+
+
 
         try {
             properties.add(LayoutProperty.createProperty(
@@ -419,7 +445,8 @@ public class ForceAtlas2 implements Layout {
             e.printStackTrace();
         }
 
-        return properties.toArray(new LayoutProperty[0]);
+        return properties.toArray(
+                new LayoutProperty[0]);
     }
 
     @Override
@@ -432,9 +459,9 @@ public class ForceAtlas2 implements Layout {
 
         // Tuning
         if (nodesCount >= 100) {
-            setScalingRatio(2.0);
+            setScalingRatio(40.0);
         } else {
-            setScalingRatio(10.0);
+            setScalingRatio(40.0);
         }
         setStrongGravityMode(false);
         setGravity(1.);
@@ -442,7 +469,7 @@ public class ForceAtlas2 implements Layout {
         // Behavior
         setOutboundAttractionDistribution(false);
         setLinLogMode(false);
-        setAdjustSizes(false);
+        setAdjustSizes(true);
         setEdgeWeightInfluence(1.);
 
         // Performance
