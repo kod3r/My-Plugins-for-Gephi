@@ -1,9 +1,17 @@
-#Force Atlas 3D
+#Plugins for Gephi
 
-Force Atlas is a layout for Gephi, scalable to 10,000 nodes and more.
 
-Force Atls *3D* is an extension which gives the option to spatialize the network in 3 dimensions instead of 2.
+In this repository I list the plugins I created for Gephi.
 
-Feedback is welcome!
+##1. Alphabetical Sorter
+This plugin is helpful to nearly sort and put apart isolated nodes floating around, before an export to SVG or PNG.
 
-http://www.clementlevallois.net
+##2. Force Atlas 3D
+
+Force Atlas 2 is a layout for Gephi created by Mathieu Jacomy et al., scalable to 10,000 nodes and more.  
+
+Force Atls *3D* extends it to 3 dimensions instead of 2.  
+
+
+Any feedback, feature requests and bug reports are welcome!  
+Please open an issue here on Github or contact me through http://www.clementlevallois.net
