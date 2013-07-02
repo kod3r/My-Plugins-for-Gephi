@@ -1,5 +1,0 @@
-Manifest-Version: 1.0
-OpenIDE-Module: net.clementlevallois.commonsmath
-OpenIDE-Module-Localizing-Bundle: net/clementlevallois/commonsmath/Bundle.properties
-OpenIDE-Module-Specification-Version: 1.0
-
