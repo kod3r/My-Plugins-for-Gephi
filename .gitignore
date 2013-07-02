@@ -9,3 +9,14 @@ keystore.ks
 dist/**
 build/**
 nbproject/private/**
+/commons-lang/commons-lang/nbproject/private/
+/commons-lang/commonsLang/build/
+/commons-lang/WeddingTables/nbproject/private/
+/commons-lang/WeddingTables/build/
+/commons-lang/Test/nbproject/private/
+/commons-lang/Test/build/
+/commons-lang/commonsLang/nbproject/private/
+/TestNetbeansAPP/FirstModule/build/
+/TestNetbeansAPP/FirstModule/nbproject/private/
+/RoleDectector/
+/InfluencersDetection/

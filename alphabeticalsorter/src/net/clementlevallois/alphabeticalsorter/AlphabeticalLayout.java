@@ -41,7 +41,8 @@
 package net.clementlevallois.alphabeticalsorter;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -59,7 +60,8 @@ public class AlphabeticalLayout extends AbstractLayout implements Layout {
 
     private Graph graph;
     private boolean converged;
-    private Map<String, Integer> mapSortedNodes;
+    private Map<Integer, String> mapNodes;
+    private Map<Integer, String> mapSortedNodes;
     private double size;
     private double x;
     private boolean inverseOrder;
@@ -87,7 +89,7 @@ public class AlphabeticalLayout extends AbstractLayout implements Layout {
     @Override
     public void goAlgo() {
         graph = graphModel.getGraphVisible();
-        mapSortedNodes = new TreeMap();
+        mapNodes = new HashMap();
         double y = 0;
         String label;
         double minX = 0;
@@ -107,17 +109,19 @@ public class AlphabeticalLayout extends AbstractLayout implements Layout {
                 continue;
             }
 
-            mapSortedNodes.put(label, n.getId());
+            mapNodes.put(n.getId(), label);
         }
+
+        ValueComparator bvc = new ValueComparator(mapNodes, inverseOrder);
+        mapSortedNodes = new TreeMap<Integer, String>(bvc);
+        mapSortedNodes.putAll(mapNodes);
+
         Node n;
 
-        List<String> listNodes = new ArrayList(mapSortedNodes.keySet());
-        Collections.sort(listNodes);
-        if (!inverseOrder) {
-            Collections.reverse(listNodes);
-        }
-        for (String string : listNodes) {
-            n = graph.getNode(mapSortedNodes.get(string));
+        List<Integer> listNodes = new ArrayList(mapSortedNodes.keySet());
+
+        for (Integer integer : listNodes) {
+            n = graph.getNode(integer);
             n.getNodeData().setX((float) (minX + x));
             n.getNodeData().setY((float) (y));
             y = y + size;
@@ -170,7 +174,6 @@ public class AlphabeticalLayout extends AbstractLayout implements Layout {
                     "getX", "setX"));
 
         } catch (Exception e) {
-            e.printStackTrace();
         }
         return properties.toArray(new LayoutProperty[1]);
     }
@@ -210,6 +213,30 @@ public class AlphabeticalLayout extends AbstractLayout implements Layout {
     public void setX(Double x) {
         this.x = x;
     }
-    
-    
+}
+
+class ValueComparator implements Comparator<Integer> {
+
+    Map<Integer, String> base;
+    boolean inverseOrder;
+
+    public ValueComparator(Map<Integer, String> base, boolean inverseOrder) {
+        this.base = base;
+        this.inverseOrder = inverseOrder;
+    }
+
+    // Note: this comparator imposes orderings that are inconsistent with equals.    
+    @Override
+    public int compare(Integer a, Integer b) {
+
+        int res = base.get(a).compareTo(base.get(b));
+        if (!inverseOrder) {
+            res = -res;
+        }
+        if (res != 0) {
+            return res;
+        } else {
+            return -1;
+        }
+    }
 }

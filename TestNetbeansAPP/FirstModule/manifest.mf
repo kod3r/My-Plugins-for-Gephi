@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+OpenIDE-Module: net.clementlevallois.firstmodule/1
+OpenIDE-Module-Install: net/clementlevallois/firstmodule/Installer.class
+OpenIDE-Module-Localizing-Bundle: net/clementlevallois/firstmodule/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

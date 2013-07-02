@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: org.google.guava10
+OpenIDE-Module-Localizing-Bundle: org/google/guava10/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+
