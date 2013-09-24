@@ -70,7 +70,7 @@ public class ShapeFileReader {
 
         //removing previous map
         for (Node n : gr.getNodes().toArray()) {
-            if (n.getNodeData().getAttributes().getValue("background_map").equals(true)) {
+            if (n.getNodeData().getLabel().equals("background_map_node")) {
                 gr.removeNode(n);
             }
         }
@@ -109,6 +109,11 @@ public class ShapeFileReader {
                 if (!regionName.equals(regionCodes.get(region))) {
                     continue;
                 }
+                if (region.equals("Europe (without Russia)")) {
+                    if (countryName.equals("Russia")) {
+                        continue;
+                    }
+                }
             } else {
                 if (!country.equals("World") & !countryName.equals(country)) {
                     continue;
@@ -125,8 +130,8 @@ public class ShapeFileReader {
                     node.getNodeData().setLabel("background_map_node");
                     node.getNodeData().setSize(0f);
                     node.getAttributes().setValue("background_map", true);
-                    node.getAttributes().setValue("background_map_lat", Double.valueOf(lat));
-                    node.getAttributes().setValue("background_map_long", Double.valueOf(lng));
+                    node.getAttributes().setValue("lat", Double.valueOf(lat));
+                    node.getAttributes().setValue("lng", Double.valueOf(lng));
                     node.getNodeData().setFixed(true);
                     gr.addNode(node);
                 }
@@ -149,6 +154,7 @@ public class ShapeFileReader {
         regionCodes.put("Americas", "19");
         regionCodes.put("Asia", "142");
         regionCodes.put("Europe", "150");
+        regionCodes.put("Europe (without Russia)", "150");
         regionCodes.put("Oceania", "9");
 
     }
