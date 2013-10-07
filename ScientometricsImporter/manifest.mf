@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: net.clementlevallois.scientometricsimporter
+OpenIDE-Module-Localizing-Bundle: net/clementlevallois/scientometricsimporter/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+
