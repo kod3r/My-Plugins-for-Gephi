@@ -31,11 +31,8 @@ import org.gephi.graph.spi.LayoutData;
 import org.gephi.layout.spi.Layout;
 import org.gephi.layout.spi.LayoutBuilder;
 import org.gephi.layout.spi.LayoutProperty;
-import org.gephi.ui.propertyeditor.NodeColumnNumbersEditor;
 import org.openide.util.Lookup;
 import org.openide.util.NbBundle;
-import org.gephi.dynamic.api.*;
-import org.gephi.data.attributes.type.*;
 import org.gephi.data.attributes.api.*;
 import org.openide.util.Exceptions;
 
