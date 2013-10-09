@@ -73,8 +73,10 @@ public class MySpigotWizardUI implements ImporterWizardUI{
     @Override
     public Panel[] getPanels() {
         if (panels == null) {
-            panels = new Panel[1];
-            panels[0] = new Panel1();
+            panels = new Panel[3];
+            panels[0] = new Panel1Wizard();
+            panels[1] = new Panel2Wizard();
+            panels[2] = new Panel3Wizard();
         }
         return panels;
     }
@@ -87,7 +89,7 @@ public class MySpigotWizardUI implements ImporterWizardUI{
     @Override
     public void unsetup(SpigotImporter importer, Panel panel) {
         //When the wizard has been closed
-        ((Panel1) ((Panel) panels[0]).getComponent()).unsetup((MyFileImporter)importer);
+//        ((Panel1) ((Panel) panels[0]).getComponent()).unsetup((MyFileImporter)importer);
  
         panels = null;
     }

@@ -5,6 +5,7 @@
 
 package net.clementlevallois.scientometricsimporter;
 
+import javax.swing.DefaultListModel;
 import org.gephi.io.importer.spi.SpigotImporter;
 import org.gephi.io.importer.spi.SpigotImporterBuilder;
 import org.openide.util.lookup.ServiceProvider;
@@ -71,4 +72,6 @@ public class MyImporterBuilder implements SpigotImporterBuilder {
     public String getName() {
         return "Scientometrics Importer";
     }
+
+    
 }

@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package net.clementlevallois.scientometricsimporter;
 
 /*
@@ -44,7 +43,8 @@ package net.clementlevallois.scientometricsimporter;
  Contributor(s): Clement Levallois
 
  */
-
+import java.io.IOException;
+import javax.swing.DefaultListModel;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.EdgeDraft;
 import org.gephi.io.importer.api.NodeDraft;
@@ -52,29 +52,36 @@ import org.gephi.io.importer.api.Report;
 import org.gephi.io.importer.spi.SpigotImporter;
 import org.gephi.utils.longtask.spi.LongTask;
 import org.gephi.utils.progress.ProgressTicket;
-
-
+import org.openide.util.Exceptions;
 
 /**
- * File importer example which can import the Matrix Market file format. This format
- * is a text-based representation of a matrix and can be tested with 
- * <a href="http://www2.research.att.com/~yifanhu/GALLERY/GRAPHS/index.html">Yifan Hu's 
- * matrix gallery</a>. 
+ * File importer example which can import the Matrix Market file format. This
+ * format is a text-based representation of a matrix and can be tested with
+ * <a
+ * href="http://www2.research.att.com/~yifanhu/GALLERY/GRAPHS/index.html">Yifan
+ * Hu's matrix gallery</a>.
  * <p>
  * The example show how graph data should be set in the {@link ContainerLoader}
  * instance. It shows how {@link NodeDraft} and {@link EdgeDraft} are created
  * from the factory. It also append logs in the {@link Report} class, which is
  * the standard way to report messages and issues.
- * 
+ *
  * @author Mathieu Bastian
  */
 public class MyFileImporter implements SpigotImporter, LongTask {
- 
+
     private ContainerLoader container;
     private Report report;
     private ProgressTicket progressTicket;
     private boolean cancel = false;
- 
+    private static String[] headers;
+    private static String filePath;
+    private static DefaultListModel listModelHeaders = new DefaultListModel();
+    private static String textDelimiter = "\"";
+    private static String fieldDelimiter = ",";
+    private static String firstConnectedAgent;
+    private static String secondConnectedAgent;
+
     @Override
     public boolean execute(ContainerLoader loader) {
         this.container = loader;
@@ -82,23 +89,103 @@ public class MyFileImporter implements SpigotImporter, LongTask {
         //Import done here
         return !cancel;
     }
- 
+
+    public static String[] getHeaders() {
+        return headers;
+    }
+
+    public static void setHeaders(String[] headers) {
+        MyFileImporter.headers = headers;
+    }
+
+    public static DefaultListModel getListModelHeaders() {
+        return listModelHeaders;
+    }
+
+    public static void setListModelHeaders(DefaultListModel listModelHeaders) {
+        MyFileImporter.listModelHeaders = listModelHeaders;
+    }
+
+    public static String getTextDelimiter() {
+        return textDelimiter;
+    }
+
+    public static void setTextDelimiter(String textDelimiter) {
+        MyFileImporter.textDelimiter = textDelimiter;
+    }
+
+    public static String getFieldDelimiter() {
+        return fieldDelimiter;
+    }
+
+    public static void setFieldDelimiter(String fieldDelimiter) {
+        MyFileImporter.fieldDelimiter = fieldDelimiter;
+    }
+
+    public static String getFilePath() {
+        return filePath;
+    }
+
+    public static void setFilePath(String filePath) {
+        MyFileImporter.filePath = filePath;
+    }
+
+    public static String getFirstConnectedAgent() {
+        return firstConnectedAgent;
+    }
+
+    public static void setFirstConnectedAgent(String firstConnectedAgent) {
+        MyFileImporter.firstConnectedAgent = firstConnectedAgent;
+    }
+
+    public static String getSecondConnectedAgent() {
+        return secondConnectedAgent;
+    }
+
+    public static void setSecondConnectedAgent(String secondConnectedAgent) {
+        MyFileImporter.secondConnectedAgent = secondConnectedAgent;
+    }
+
+    public static void parse() {
+        try {
+            fieldDelimiter = Panel1.selectedFileDelimiter;
+            textDelimiter = Panel1.jTextFieldTextDelimiter.getText();
+            CsvParser csvParser = new CsvParser(MyFileImporter.getFilePath(), textDelimiter, fieldDelimiter);
+            headers = csvParser.getHeaders();
+
+            MyFileImporter.setHeaders(headers);
+
+            DefaultListModel listModel = new DefaultListModel();
+            for (String string : headers) {
+                listModel.addElement(string);
+            }
+            MyFileImporter.setListModelHeaders(listModel);
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+    }
+
+    public static void getConnectedAgents() {
+        firstConnectedAgent = Panel2.firstConnector;
+        secondConnectedAgent = Panel2.secondConnector;
+    }
+
     @Override
     public ContainerLoader getContainer() {
         return container;
     }
- 
+
     @Override
     public Report getReport() {
         return report;
     }
- 
+
     @Override
     public boolean cancel() {
         cancel = true;
-        return true;
+        return cancel;
     }
- 
+
     @Override
     public void setProgressTicket(ProgressTicket progressTicket) {
         this.progressTicket = progressTicket;

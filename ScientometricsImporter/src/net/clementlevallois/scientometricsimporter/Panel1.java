@@ -4,23 +4,39 @@
  */
 package net.clementlevallois.scientometricsimporter;
 
-import java.awt.Component;
-import java.util.ArrayList;
-import java.util.List;
-import javax.swing.event.ChangeListener;
-import org.openide.WizardDescriptor;
-import org.openide.util.HelpCtx;
+import java.io.File;
+import java.io.IOException;
+import javax.swing.DefaultListModel;
+import javax.swing.JFileChooser;
+import javax.swing.JList;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import org.openide.util.Exceptions;
 
 /**
  *
  * @author C. Levallois
  */
-public class Panel1 extends javax.swing.JPanel implements WizardDescriptor.Panel {
+public class Panel1 extends javax.swing.JPanel {
 
-    private List<ChangeListener> listeners; //these allow you to tell Gephi when UI changes are made
+    File f;
+    String workingDirectory;
+    private String fileSelectedPathANdName;
+    private String fileSelectedName;
+    private String[] headers;
+    public static String selectedFileDelimiter;
 
     public Panel1() {
         initComponents();
+
+        jListFieldDelimiter.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                selectedFileDelimiter = (String) ((JList) e.getSource()).getSelectedValue();
+            }
+        });
     }
 
     /**
@@ -32,54 +48,123 @@ public class Panel1 extends javax.swing.JPanel implements WizardDescriptor.Panel
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jCheckBox = new javax.swing.JCheckBox();
+        jButtonSelectFile = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        jTextFieldTextDelimiter = new javax.swing.JTextField();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jListFieldDelimiter = new javax.swing.JList();
 
-        org.openide.awt.Mnemonics.setLocalizedText(jCheckBox, org.openide.util.NbBundle.getMessage(Panel1.class, "Panel1.jCheckBox.text")); // NOI18N
-        jCheckBox.addActionListener(new java.awt.event.ActionListener() {
+        org.openide.awt.Mnemonics.setLocalizedText(jButtonSelectFile, org.openide.util.NbBundle.getMessage(Panel1.class, "Panel1.jButtonSelectFile.text")); // NOI18N
+        jButtonSelectFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxActionPerformed(evt);
+                jButtonSelectFileActionPerformed(evt);
             }
         });
 
         org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(Panel1.class, "Panel1.jLabel1.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel2, org.openide.util.NbBundle.getMessage(Panel1.class, "Panel1.jLabel2.text")); // NOI18N
+
+        jTextFieldTextDelimiter.setText(org.openide.util.NbBundle.getMessage(Panel1.class, "Panel1.jTextFieldTextDelimiter.text")); // NOI18N
+
+        jListFieldDelimiter.setModel(new javax.swing.AbstractListModel() {
+            String[] strings = { "comma", "semicolon", "tab", "|" };
+            public int getSize() { return strings.length; }
+            public Object getElementAt(int i) { return strings[i]; }
+        });
+        jListFieldDelimiter.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jListFieldDelimiter.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                jListFieldDelimiterValueChanged(evt);
+            }
+        });
+        jScrollPane1.setViewportView(jListFieldDelimiter);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addGap(29, 29, 29)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButtonSelectFile)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(103, 103, 103)
-                        .addComponent(jCheckBox))
+                        .addComponent(jLabel2)
+                        .addGap(20, 20, 20)
+                        .addComponent(jTextFieldTextDelimiter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(154, 154, 154)
-                        .addComponent(jLabel1)))
-                .addContainerGap(222, Short.MAX_VALUE))
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(43, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(59, 59, 59)
-                .addComponent(jCheckBox)
-                .addGap(96, 96, 96)
-                .addComponent(jLabel1)
-                .addContainerGap(108, Short.MAX_VALUE))
+                .addGap(31, 31, 31)
+                .addComponent(jButtonSelectFile)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(77, 77, 77)
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 79, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(jTextFieldTextDelimiter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(104, 104, 104))
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxActionPerformed
+    private void jButtonSelectFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSelectFileActionPerformed
+        try {
+            f = new File(new File(".").getCanonicalPath());
+            JFileChooser chooser = new JFileChooser();
+
+            chooser.setCurrentDirectory(f);
+            //chooser.setCurrentDirectory(new java.io.File("D:\\Docs Pro Clement\\E-humanities\\TextMining\\Exported Items\\"));
+            chooser.setDialogTitle("Select a file");
+            //chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            chooser.setAcceptAllFileFilterUsed(false);
+            if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                System.out.println("Current directory: " + chooser.getCurrentDirectory().getAbsolutePath());
+
+                workingDirectory = chooser.getCurrentDirectory().getAbsolutePath().toString();
+                fileSelectedPathANdName = chooser.getSelectedFile().toString();
+                fileSelectedName = chooser.getSelectedFile().getName();
+                System.out.println("Selected File: " + fileSelectedPathANdName);
+                MyFileImporter.setFilePath(fileSelectedPathANdName);
+
+            }
+
+
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+
+        }
+
+    }//GEN-LAST:event_jButtonSelectFileActionPerformed
+
+    private void jListFieldDelimiterValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jListFieldDelimiterValueChanged
         // TODO add your handling code here:
-    }//GEN-LAST:event_jCheckBoxActionPerformed
+    }//GEN-LAST:event_jListFieldDelimiterValueChanged
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JCheckBox jCheckBox;
+    private javax.swing.JButton jButtonSelectFile;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    public static javax.swing.JList jListFieldDelimiter;
+    private javax.swing.JScrollPane jScrollPane1;
+    public static javax.swing.JTextField jTextFieldTextDelimiter;
     // End of variables declaration//GEN-END:variables
 
-    @Override
-    public Component getComponent() {
-        return this;
+    public void unsetup(MyFileImporter importer) {
+        //Configure the importer
+        //Example
+        //importer.setOption(optionCheckbox.isSelected());
     }
 
     @Override
@@ -87,47 +172,8 @@ public class Panel1 extends javax.swing.JPanel implements WizardDescriptor.Panel
         return "Select Datasource";   //this will be the title of the panel in the wizard
     }
 
-    @Override
-    public HelpCtx getHelp() {
-        return HelpCtx.DEFAULT_HELP;
-    }
 
-    /*
-     * You can use a settings object to keep track of state. Normally the
-     * settings object will be the WizardDescriptor, so you can use
-     * WizardDescriptor.getProperty & putProperty to store information entered
-     * by the user.
-     */
-    @Override
-    public void readSettings(Object settings) {
-    }
-
-    @Override
-    public void storeSettings(Object settings) {
-    }
-
-    @Override
-    public boolean isValid() {
-        return true;             //if you implement the change listeners properly, this should contain actual logic
-    }
-
-    @Override
-    public void addChangeListener(ChangeListener cl) {
-        if (listeners == null) {
-            listeners = new ArrayList();
-        }
-
-        listeners.add(cl);
-    }
-
-    @Override
-    public void removeChangeListener(ChangeListener cl) {
-        listeners.remove(cl);
-    }
-
-    public void unsetup(MyFileImporter importer) {
-        //Configure the importer
-        //Example
-        //importer.setOption(optionCheckbox.isSelected());
+    public String[] getHeaders() {
+        return headers;
     }
 }
